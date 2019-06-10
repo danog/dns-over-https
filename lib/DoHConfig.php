@@ -38,6 +38,13 @@ final class DoHConfig
     {
         return $this->nameservers;
     }
+    public function isNameserver($string): bool
+    {
+        foreach ($this->nameservers as $nameserver) {
+            if ($nameserver->getHost() === $string) return true;
+        }
+        return false;
+    }
 
     public function getArtax(): Client
     {

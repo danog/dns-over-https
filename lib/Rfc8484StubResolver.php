@@ -22,6 +22,7 @@ use Amp\Dns\Record;
 use Amp\Dns\Resolver;
 use Amp\DoH\Internal\HttpsSocket;
 use Amp\Dns\ConfigLoader;
+use Amp\Dns\Rfc1035StubResolver;
 
 final class Rfc8484StubResolver implements Resolver
 {
@@ -48,6 +49,9 @@ final class Rfc8484StubResolver implements Resolver
     /** @var Promise[] */
     private $pendingQueries = [];
 
+    /** @var \Amp\Dns\Rfc1035StubResolver */
+    private $simpleResolver;
+
     public function __construct(DoHConfig $config, Cache $cache = null, ConfigLoader $configLoader = null)
     {
         $this->cache = $cache ?? new ArrayCache(5000/* default gc interval */, 256/* size */);
@@ -55,6 +59,7 @@ final class Rfc8484StubResolver implements Resolver
             ? new WindowsConfigLoader()
             : new UnixConfigLoader);
         $this->dohConfig = $config;
+        $this->simpleResolver = new Rfc1035StubResolver(null, $this->configLoader);
 
         $this->questionFactory = new QuestionFactory;
     }
@@ -109,6 +114,10 @@ final class Rfc8484StubResolver implements Resolver
                 : [new Record('127.0.0.1', Record::A, null)];
             }
 
+            if ($this->dohConfig->isNameserver($name)) {
+                return yield $this->simpleResolver->resolve($name);
+            }
+
             for ($redirects = 0; $redirects < 5; $redirects++) {
                 try {
                     if ($typeRestriction) {
@@ -121,7 +130,6 @@ final class Rfc8484StubResolver implements Resolver
                             ]);
 
                             $records = \array_merge(...$records);
-
                             break; // Break redirect loop, otherwise we query the same records 5 times
                         } catch (MultiReasonException $e) {
                             $errors = [];
@@ -130,7 +138,6 @@ final class Rfc8484StubResolver implements Resolver
                                 if ($reason instanceof NoRecordException) {
                                     throw $reason;
                                 }
-
                                 $errors[] = $reason->getMessage();
                             }
 
@@ -361,7 +368,7 @@ final class Rfc8484StubResolver implements Resolver
     {
         $uri = $nameserver->getUri();
         if (isset($this->sockets[$uri])) {
-            return new Success($this->sockets[$uri]);
+            return $this->sockets[$uri];
         }
 
 

@@ -15,6 +15,8 @@ use LibDNS\Messages\MessageFactory;
 use LibDNS\Messages\MessageTypes;
 use LibDNS\Records\Question;
 use function Amp\call;
+use Amp\Artax\Client;
+use Amp\DoH\Nameserver;
 
 /** @internal */
 abstract class Socket
@@ -42,7 +44,7 @@ abstract class Socket
      * @return Promise<self>
      */
 
-    abstract public static function connect(Client $artax, Nameserver $nameserver): Socket;
+    abstract public static function connect(Client $artax, Nameserver $nameserver): self;
 
     /**
      * @param Message $message
@@ -56,10 +58,6 @@ abstract class Socket
      */
     abstract protected function receive(): Promise;
 
-    /**
-     * @return void
-     */
-    abstract public function close();
 
     protected function __construct()
     {
@@ -72,8 +70,8 @@ abstract class Socket
                 $this->error($exception);
                 return;
             }
-
             \assert($message instanceof Message);
+
             $id = $message->getId();
 
             // Ignore duplicate and invalid responses.
@@ -85,9 +83,7 @@ abstract class Socket
             }
 
             if (empty($this->pending)) {
-                $this->input->unreference();
             } elseif (!$this->receiving) {
-                $this->input->reference();
                 $this->receiving = true;
                 $this->receive()->onResolve($this->onResolve);
             }
@@ -135,7 +131,6 @@ abstract class Socket
                 throw $exception;
             }
 
-            $this->input->reference();
 
             if (!$this->receiving) {
                 $this->receiving = true;
@@ -151,10 +146,6 @@ abstract class Socket
                 $result = yield Promise\timeout($deferred->promise(), $timeout);
             } catch (Amp\TimeoutException $exception) {
                 unset($this->pending[$id]);
-
-                if (empty($this->pending)) {
-                    $this->input->unreference();
-                }
 
                 throw new TimeoutException("Didn't receive a response within {$timeout} milliseconds.");
             } finally {

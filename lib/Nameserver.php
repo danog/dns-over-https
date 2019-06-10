@@ -10,6 +10,7 @@ final class Nameserver
 
     private $type;
     private $uri;
+    private $host;
     private $headers = [];
 
     public function __construct(string $uri, int $type = self::RFC8484_POST, array $headers = [])
@@ -17,10 +18,15 @@ final class Nameserver
         $this->uri = $uri;
         $this->type = $type;
         $this->headers = $headers;
+        $this->host = parse_url($uri, PHP_URL_HOST);
     }
     public function getUri(): string
     {
         return $this->uri;
+    }
+    public function getHost(): string
+    {
+        return $this->host;
     }
     public function getHeaders(): array
     {
@@ -32,6 +38,7 @@ final class Nameserver
     }
     public function __toString(): string
     {
+        return $this->uri;
         switch ($this->type) {
             case self::RFC8484_GET:
                 return "{$this->uri} RFC 8484 GET";
