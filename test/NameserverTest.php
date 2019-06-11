@@ -2,9 +2,9 @@
 
 namespace Amp\DoH\Test;
 
-use Amp\PHPUnit\TestCase;
-use Amp\DoH\Nameserver;
 use Amp\Dns\ConfigException;
+use Amp\DoH\Nameserver;
+use Amp\PHPUnit\TestCase;
 
 class NameserverTest extends TestCase
 {
@@ -74,5 +74,4 @@ class NameserverTest extends TestCase
             ['https://mozilla.cloudflare-dns.com/dns-query', -1],
         ];
     }
-
 }

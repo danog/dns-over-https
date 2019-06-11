@@ -6,12 +6,12 @@ use Amp\Artax\Client;
 use Amp\Artax\DefaultClient;
 use Amp\Cache\ArrayCache;
 use Amp\Cache\Cache;
+use Amp\Dns\ConfigException;
 use Amp\Dns\ConfigLoader;
 use Amp\Dns\Resolver;
+use Amp\Dns\Rfc1035StubResolver;
 use Amp\Dns\UnixConfigLoader;
 use Amp\Dns\WindowsConfigLoader;
-use Amp\Dns\Rfc1035StubResolver;
-use Amp\Dns\ConfigException;
 
 final class DoHConfig
 {
@@ -38,7 +38,6 @@ final class DoHConfig
             ? new WindowsConfigLoader
             : new UnixConfigLoader);
         $this->subResolver = $resolver ?? new Rfc1035StubResolver(null, $this->configLoader);
-
     }
 
     private function validateNameserver($nameserver)
@@ -58,7 +57,6 @@ final class DoHConfig
             if ($nameserver->getHost() === $string) {
                 return true;
             }
-
         }
         return false;
     }

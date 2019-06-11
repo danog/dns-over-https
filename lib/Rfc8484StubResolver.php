@@ -3,23 +3,21 @@
 namespace Amp\DoH;
 
 use Amp\Cache\Cache;
-use Amp\Dns\ConfigLoader;
+use Amp\Dns\ConfigException;
 use Amp\Dns\DnsException;
 use Amp\Dns\NoRecordException;
 use Amp\Dns\Record;
 use Amp\Dns\Resolver;
-use Amp\Dns\Rfc1035StubResolver;
 use Amp\Dns\TimeoutException;
 use Amp\DoH\Internal\HttpsSocket;
 use Amp\DoH\Internal\Socket;
 use Amp\MultiReasonException;
 use Amp\Promise;
-use function Amp\call;
-use function Amp\Dns\normalizeName;
 use LibDNS\Messages\Message;
 use LibDNS\Records\Question;
 use LibDNS\Records\QuestionFactory;
-use Amp\Dns\ConfigException;
+use function Amp\call;
+use function Amp\Dns\normalizeName;
 
 final class Rfc8484StubResolver implements Resolver
 {
@@ -179,7 +177,7 @@ final class Rfc8484StubResolver implements Resolver
     public function reloadConfig(): Promise
     {
         $this->subResolver->reloadConfig();
-        
+
         if ($this->pendingConfig) {
             return $this->pendingConfig;
         }

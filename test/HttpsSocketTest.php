@@ -3,12 +3,12 @@
 namespace Amp\DoH\Test;
 
 use Amp\Artax\DefaultClient;
-use Amp\DoH;
 use Amp\Dns;
-use Amp\DoH\Nameserver;
-use function Amp\Promise\wait;
-use LibDNS\Records\QuestionFactory;
+use Amp\DoH;
 use Amp\DoH\Internal\Socket;
+use Amp\DoH\Nameserver;
+use LibDNS\Records\QuestionFactory;
+use function Amp\Promise\wait;
 
 class HttpsSocketTest extends SocketTest
 {

@@ -2,9 +2,9 @@
 
 namespace Amp\DoH\Test;
 
-use Amp\PHPUnit\TestCase;
-use Amp\DoH\QueryEncoderFactory;
 use Amp\DoH\QueryEncoder;
+use Amp\DoH\QueryEncoderFactory;
+use Amp\PHPUnit\TestCase;
 
 class QueryEncoderFactoryTest extends TestCase
 {

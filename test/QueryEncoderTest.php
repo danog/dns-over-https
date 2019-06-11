@@ -12,7 +12,7 @@ use LibDNS\Messages\MessageTypes;
 class QueryEncoderTest extends TestCase
 {
     /**
-     * Test encoding of valid DNS message payloads
+     * Test encoding of valid DNS message payloads.
      *
      * @param string $message
      * @return void
@@ -28,8 +28,8 @@ class QueryEncoderTest extends TestCase
         $encoder = (new QueryEncoderFactory)->create();
         $request = $encoder->encode($response);
 
-        $this->assertInternalType('string', $request, "Got a ".gettype($request)." instead of a string");
-        parse_str($request, $output);
+        $this->assertInternalType('string', $request, "Got a ".\gettype($request)." instead of a string");
+        \parse_str($request, $output);
         $this->assertNotEmpty($output);
         $this->assertArrayHasKey('cd', $output);
         $this->assertArrayHasKey('do', $output);
@@ -40,7 +40,7 @@ class QueryEncoderTest extends TestCase
         $this->assertEquals($output['do'], 0);
         $this->assertEquals($output['ct'], 'application/dns-json');
         $this->assertEquals($output['type'], $response->getQuestionRecords()->getRecordByIndex(0)->getType());
-        $this->assertEquals($output['name'], implode('.', $response->getQuestionRecords()->getRecordByIndex(0)->getName()->getLabels()));
+        $this->assertEquals($output['name'], \implode('.', $response->getQuestionRecords()->getRecordByIndex(0)->getName()->getLabels()));
     }
 
     public function provideValidQueryPayloads()
@@ -103,7 +103,7 @@ class QueryEncoderTest extends TestCase
     }
 
     /**
-     * Test query encoding of invalid DNS payloads
+     * Test query encoding of invalid DNS payloads.
      *
      * @param $request
      * @return void

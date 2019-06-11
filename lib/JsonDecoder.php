@@ -1,9 +1,12 @@
 <?php
+
 namespace Amp\DoH;
 
+use Amp\Dns\DnsException;
 use LibDNS\Decoder\DecodingContextFactory;
 use LibDNS\Messages\Message;
 use LibDNS\Messages\MessageFactory;
+use LibDNS\Messages\MessageTypes;
 use LibDNS\Packets\Packet;
 use LibDNS\Packets\PacketFactory;
 use LibDNS\Records\Question;
@@ -22,11 +25,9 @@ use LibDNS\Records\Types\Short;
 use LibDNS\Records\Types\Type;
 use LibDNS\Records\Types\TypeBuilder;
 use LibDNS\Records\Types\Types;
-use LibDNS\Messages\MessageTypes;
-use Amp\Dns\DnsException;
 
 /**
- * Decodes JSON DNS strings to Message objects
+ * Decodes JSON DNS strings to Message objects.
  *
  * @author Daniil Gentili <https://daniil.it>,  Chris Wright <https://github.com/DaveRandom>
  */
@@ -63,7 +64,7 @@ class JsonDecoder
     private $decodingContextFactory;
 
     /**
-     * Constructor
+     * Constructor.
      *
      * @param \LibDNS\Packets\PacketFactory $packetFactory
      * @param \LibDNS\Messages\MessageFactory $messageFactory
@@ -89,7 +90,7 @@ class JsonDecoder
         $this->decodingContextFactory = $decodingContextFactory;
     }
     /**
-     * Decode a question record
+     * Decode a question record.
      *
      *
      * @return \LibDNS\Records\Question
@@ -99,8 +100,8 @@ class JsonDecoder
     {
         /** @var \LibDNS\Records\Types\DomainName $domainName */
         $domainName = $this->typeBuilder->build(Types::DOMAIN_NAME);
-        $labels = explode('.', $record['name']);
-        if (!empty($last = array_pop($labels))) {
+        $labels = \explode('.', $record['name']);
+        if (!empty($last = \array_pop($labels))) {
             $labels[] = $last;
         }
         $domainName->setLabels($labels);
@@ -112,7 +113,7 @@ class JsonDecoder
     }
 
     /**
-     * Decode a resource record
+     * Decode a resource record.
      *
      *
      * @return \LibDNS\Records\Resource
@@ -123,8 +124,8 @@ class JsonDecoder
     {
         /** @var \LibDNS\Records\Types\DomainName $domainName */
         $domainName = $this->typeBuilder->build(Types::DOMAIN_NAME);
-        $labels = explode('.', $record['name']);
-        if (!empty($last = array_pop($labels))) {
+        $labels = \explode('.', $record['name']);
+        if (!empty($last = \array_pop($labels))) {
             $labels[] = $last;
         }
         $domainName->setLabels($labels);
@@ -146,7 +147,7 @@ class JsonDecoder
         return $resource;
     }
     /**
-     * Decode a Type field
+     * Decode a Type field.
      *
      *
      * @param \LibDNS\Records\Types\Type $type The object to populate with the result
@@ -157,28 +158,28 @@ class JsonDecoder
     {
         if ($type instanceof Anything) {
             $this->decodeAnything($type, $data);
-        } else if ($type instanceof BitMap) {
+        } elseif ($type instanceof BitMap) {
             $this->decodeBitMap($type, $data);
-        } else if ($type instanceof Char) {
+        } elseif ($type instanceof Char) {
             $this->decodeChar($type, $data);
-        } else if ($type instanceof CharacterString) {
+        } elseif ($type instanceof CharacterString) {
             $this->decodeCharacterString($type, $data);
-        } else if ($type instanceof DomainName) {
+        } elseif ($type instanceof DomainName) {
             $this->decodeDomainName($type, $data);
-        } else if ($type instanceof IPv4Address) {
+        } elseif ($type instanceof IPv4Address) {
             $this->decodeIPv4Address($type, $data);
-        } else if ($type instanceof IPv6Address) {
+        } elseif ($type instanceof IPv6Address) {
             $this->decodeIPv6Address($type, $data);
-        } else if ($type instanceof Long) {
+        } elseif ($type instanceof Long) {
             $this->decodeLong($type, $data);
-        } else if ($type instanceof Short) {
+        } elseif ($type instanceof Short) {
             $this->decodeShort($type, $data);
         } else {
             throw new \InvalidArgumentException('Unknown Type '.\get_class($type));
         }
     }
     /**
-     * Decode an Anything field
+     * Decode an Anything field.
      *
      *
      * @param \LibDNS\Records\Types\Anything $anything The object to populate with the result
@@ -188,11 +189,11 @@ class JsonDecoder
      */
     private function decodeAnything(Anything $anything, $data)
     {
-        $anything->setValue(hex2bin($data));
+        $anything->setValue(\hex2bin($data));
     }
 
     /**
-     * Decode a BitMap field
+     * Decode a BitMap field.
      *
      *
      * @param \LibDNS\Records\Types\BitMap $bitMap The object to populate with the result
@@ -202,11 +203,11 @@ class JsonDecoder
      */
     private function decodeBitMap(BitMap $bitMap, $data)
     {
-        $bitMap->setValue(hex2bin($data));
+        $bitMap->setValue(\hex2bin($data));
     }
 
     /**
-     * Decode a Char field
+     * Decode a Char field.
      *
      *
      * @param \LibDNS\Records\Types\Char $char The object to populate with the result
@@ -220,7 +221,7 @@ class JsonDecoder
     }
 
     /**
-     * Decode a CharacterString field
+     * Decode a CharacterString field.
      *
      *
      * @param \LibDNS\Records\Types\CharacterString $characterString The object to populate with the result
@@ -233,7 +234,7 @@ class JsonDecoder
     }
 
     /**
-     * Decode a DomainName field
+     * Decode a DomainName field.
      *
      *
      * @param \LibDNS\Records\Types\DomainName $domainName The object to populate with the result
@@ -242,8 +243,8 @@ class JsonDecoder
      */
     private function decodeDomainName(DomainName $domainName, $result)
     {
-        $labels = explode('.', $result);
-        if (!empty($last = array_pop($labels))) {
+        $labels = \explode('.', $result);
+        if (!empty($last = \array_pop($labels))) {
             $labels[] = $last;
         }
 
@@ -251,7 +252,7 @@ class JsonDecoder
     }
 
     /**
-     * Decode an IPv4Address field
+     * Decode an IPv4Address field.
      *
      *
      * @param \LibDNS\Records\Types\IPv4Address $ipv4Address The object to populate with the result
@@ -260,12 +261,12 @@ class JsonDecoder
      */
     private function decodeIPv4Address(IPv4Address $ipv4Address, $result)
     {
-        $octets = \unpack('C4', inet_pton($result));
+        $octets = \unpack('C4', \inet_pton($result));
         $ipv4Address->setOctets($octets);
     }
 
     /**
-     * Decode an IPv6Address field
+     * Decode an IPv6Address field.
      *
      *
      * @param \LibDNS\Records\Types\IPv6Address $ipv6Address The object to populate with the result
@@ -274,12 +275,12 @@ class JsonDecoder
      */
     private function decodeIPv6Address(IPv6Address $ipv6Address, $result)
     {
-        $shorts = \unpack('n8', inet_pton($result));
+        $shorts = \unpack('n8', \inet_pton($result));
         $ipv6Address->setShorts($shorts);
     }
 
     /**
-     * Decode a Long field
+     * Decode a Long field.
      *
      *
      * @param \LibDNS\Records\Types\Long $long The object to populate with the result
@@ -292,7 +293,7 @@ class JsonDecoder
     }
 
     /**
-     * Decode a Short field
+     * Decode a Short field.
      *
      *
      * @param \LibDNS\Records\Types\Short $short The object to populate with the result
@@ -305,7 +306,7 @@ class JsonDecoder
     }
 
     /**
-     * Decode a Message from JSON-encoded string
+     * Decode a Message from JSON-encoded string.
      *
      * @param string $data The data string to decode
      * @param int $requestId The message ID to set
@@ -335,10 +336,10 @@ class JsonDecoder
         $message->isRecursionDesired($result['RD']);
         $message->isRecursionAvailable($result['RA']);
 
-        $decodingContext->setExpectedQuestionRecords(isset($result['Question']) ? count($result['Question']) : 0);
-        $decodingContext->setExpectedAnswerRecords(isset($result['Answer']) ? count($result['Answer']) : 0);
+        $decodingContext->setExpectedQuestionRecords(isset($result['Question']) ? \count($result['Question']) : 0);
+        $decodingContext->setExpectedAnswerRecords(isset($result['Answer']) ? \count($result['Answer']) : 0);
         $decodingContext->setExpectedAuthorityRecords(0);
-        $decodingContext->setExpectedAdditionalRecords(isset($result['Additional']) ? count($result['Additional']) : 0);
+        $decodingContext->setExpectedAdditionalRecords(isset($result['Additional']) ? \count($result['Additional']) : 0);
 
         $questionRecords = $message->getQuestionRecords();
         $expected = $decodingContext->getExpectedQuestionRecords();

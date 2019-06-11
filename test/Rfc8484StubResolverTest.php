@@ -2,15 +2,15 @@
 
 namespace Amp\DoH\Test;
 
+use Amp\Dns\ConfigException;
 use Amp\Dns\DnsException;
 use Amp\Dns\InvalidNameException;
 use Amp\Dns\Record;
+use Amp\Dns\Rfc1035StubResolver;
 use Amp\DoH;
 use Amp\DoH\Rfc8484StubResolver;
 use Amp\Loop;
 use Amp\PHPUnit\TestCase;
-use Amp\Dns\Rfc1035StubResolver;
-use Amp\Dns\ConfigException;
 
 class Rfc8484StubResolverTest extends TestCase
 {

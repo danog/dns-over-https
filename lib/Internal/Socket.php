@@ -11,11 +11,11 @@ use Amp\Dns\DnsException;
 use Amp\Dns\TimeoutException;
 use Amp\DoH\Nameserver;
 use Amp\Promise;
-use function Amp\call;
 use LibDNS\Messages\Message;
 use LibDNS\Messages\MessageFactory;
 use LibDNS\Messages\MessageTypes;
 use LibDNS\Records\Question;
+use function Amp\call;
 
 /** @internal */
 abstract class Socket
@@ -92,8 +92,7 @@ abstract class Socket
             } while (isset($this->pending[$id]));
 
             $deferred = new Deferred;
-            $pending = new class
-            {
+            $pending = new class {
                 use Amp\Struct;
 
                 public $deferred;

@@ -4,14 +4,12 @@ namespace Amp\DoH\Test;
 
 use Amp\Artax\DefaultClient;
 use Amp\Cache\ArrayCache;
-use Amp\Dns\Config;
 use Amp\Dns\ConfigException;
 use Amp\Dns\Rfc1035StubResolver;
 use Amp\Dns\UnixConfigLoader;
 use Amp\Dns\WindowsConfigLoader;
 use Amp\DoH\DoHConfig;
 use Amp\DoH\Nameserver;
-use Amp\DoH\Rfc8484StubResolver;
 use Amp\PHPUnit\TestCase;
 
 class DoHConfigTest extends TestCase

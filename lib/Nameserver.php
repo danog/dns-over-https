@@ -2,7 +2,6 @@
 
 namespace Amp\DoH;
 
-use Amp\Uri\InvalidDnsNameException;
 use Amp\Dns\ConfigException;
 
 final class Nameserver
@@ -18,16 +17,16 @@ final class Nameserver
 
     public function __construct(string $uri, int $type = self::RFC8484_POST, array $headers = [])
     {
-        if (parse_url($uri, PHP_URL_SCHEME) !== 'https') {
+        if (\parse_url($uri, PHP_URL_SCHEME) !== 'https') {
             throw new ConfigException('Did not provide a valid HTTPS url!');
         }
-        if (!in_array($type, [self::RFC8484_GET, self::RFC8484_POST, self::GOOGLE_JSON])) {
+        if (!\in_array($type, [self::RFC8484_GET, self::RFC8484_POST, self::GOOGLE_JSON])) {
             throw new ConfigException('Invalid nameserver type provided!');
         }
         $this->uri = $uri;
         $this->type = $type;
         $this->headers = $headers;
-        $this->host = parse_url($uri, PHP_URL_HOST);
+        $this->host = \parse_url($uri, PHP_URL_HOST);
     }
     public function getUri(): string
     {

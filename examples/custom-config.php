@@ -6,8 +6,6 @@ use Amp\Dns;
 use Amp\DoH;
 use Amp\Loop;
 use Amp\Promise;
-use Amp\DoH\Nameserver;
-use function Amp\call;
 
 $customConfigLoader = new class implements Dns\ConfigLoader {
     public function loadConfig(): Promise
@@ -36,4 +34,3 @@ Loop::run(function () {
         pretty_print_error($hostname, $e);
     }
 });
-

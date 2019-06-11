@@ -5,16 +5,14 @@ namespace Amp\DoH\Internal;
 use Amp;
 use Amp\Artax\Client;
 use Amp\Artax\Request;
-use Amp\Artax\Response;
-use Amp\Deferred;
+use Amp\DoH\JsonDecoderFactory;
 use Amp\DoH\Nameserver;
+use Amp\DoH\QueryEncoderFactory;
 use Amp\Promise;
-use function Amp\call;
 use LibDNS\Decoder\DecoderFactory;
 use LibDNS\Encoder\EncoderFactory;
 use LibDNS\Messages\Message;
-use Amp\DoH\JsonDecoderFactory;
-use Amp\DoH\QueryEncoderFactory;
+use function Amp\call;
 
 /** @internal */
 final class HttpsSocket extends Socket
@@ -54,7 +52,7 @@ final class HttpsSocket extends Socket
 
         parent::__construct();
     }
-    
+
     protected function resolve(Message $message): Promise
     {
         $id = $message->getID();
@@ -94,5 +92,4 @@ final class HttpsSocket extends Socket
             }
         });
     }
-
 }

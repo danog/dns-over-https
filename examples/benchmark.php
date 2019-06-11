@@ -2,8 +2,8 @@
 
 require __DIR__ . "/_bootstrap.php";
 
-use Amp\DoH;
 use Amp\Dns;
+use Amp\DoH;
 use Amp\Loop;
 
 print "Downloading top 500 domains..." . PHP_EOL;

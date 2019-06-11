@@ -2,16 +2,16 @@
 
 namespace Amp\DoH\Test;
 
+use Amp\Dns\DnsException;
 use Amp\DoH\JsonDecoderFactory;
 use Amp\PHPUnit\TestCase;
 use LibDNS\Messages\Message;
-use Amp\Dns\DnsException;
 use LibDNS\Messages\MessageTypes;
 
 class JsonDecoderTest extends TestCase
 {
     /**
-     * Test decoding of valid JSON DNS payloads
+     * Test decoding of valid JSON DNS payloads.
      *
      * @param string $message
      * @param int $requestId
@@ -89,7 +89,7 @@ class JsonDecoderTest extends TestCase
 
 
     /**
-     * Test decoding of invalid JSON DNS payloads
+     * Test decoding of invalid JSON DNS payloads.
      *
      * @param string $message
      * @param int $requestId

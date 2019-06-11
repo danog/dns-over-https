@@ -3,14 +3,13 @@
 namespace Amp\DoH\Test;
 
 use Amp\Dns;
+use Amp\DoH\Internal\Socket;
+use Amp\DoH\Nameserver;
 use Amp\Loop;
 use Amp\PHPUnit\TestCase;
-use Amp\Promise;
 use LibDNS\Messages\Message;
 use LibDNS\Messages\MessageTypes;
 use LibDNS\Records\QuestionFactory;
-use Amp\DoH\Internal\Socket;
-use Amp\DoH\Nameserver;
 
 abstract class SocketTest extends TestCase
 {

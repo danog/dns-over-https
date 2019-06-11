@@ -2,9 +2,9 @@
 
 namespace Amp\DoH\Test;
 
-use Amp\PHPUnit\TestCase;
-use Amp\DoH\JsonDecoderFactory;
 use Amp\DoH\JsonDecoder;
+use Amp\DoH\JsonDecoderFactory;
+use Amp\PHPUnit\TestCase;
 
 class JsonDecoderFactoryTest extends TestCase
 {
