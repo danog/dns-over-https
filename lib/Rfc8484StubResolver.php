@@ -2,28 +2,23 @@
 
 namespace Amp\DoH;
 
-use Amp\Cache\ArrayCache;
 use Amp\Cache\Cache;
+use Amp\Dns\ConfigLoader;
 use Amp\Dns\DnsException;
 use Amp\Dns\NoRecordException;
+use Amp\Dns\Record;
+use Amp\Dns\Resolver;
+use Amp\Dns\Rfc1035StubResolver;
+use Amp\Dns\TimeoutException;
+use Amp\DoH\Internal\HttpsSocket;
 use Amp\DoH\Internal\Socket;
-use Amp\DoH\Internal\TcpSocket;
-use Amp\DoH\Internal\UdpSocket;
-use Amp\Loop;
 use Amp\MultiReasonException;
 use Amp\Promise;
-use Amp\Success;
 use function Amp\call;
+use function Amp\Dns\normalizeName;
 use LibDNS\Messages\Message;
 use LibDNS\Records\Question;
 use LibDNS\Records\QuestionFactory;
-use Amp\Dns\TimeoutException;
-use Amp\Dns\Record;
-use Amp\Dns\Resolver;
-use Amp\DoH\Internal\HttpsSocket;
-use Amp\Dns\ConfigLoader;
-use Amp\Dns\Rfc1035StubResolver;
-use function Amp\Dns\normalizeName;
 
 final class Rfc8484StubResolver implements Resolver
 {
@@ -114,7 +109,14 @@ final class Rfc8484StubResolver implements Resolver
             }
 
             if ($this->dohConfig->isNameserver($name)) {
-                return yield $this->simpleResolver->resolve($name);
+                // Work around an OPCache issue that returns an empty array with "return yield ...",
+                // so assign to a variable first and return after the try block.
+                //
+                // See https://github.com/amphp/dns/issues/58.
+                // See https://bugs.php.net/bug.php?id=74840.
+
+                $records = yield $this->simpleResolver->resolve($name, $typeRestriction);
+                return $records;
             }
 
             for ($redirects = 0; $redirects < 5; $redirects++) {
@@ -369,7 +371,6 @@ final class Rfc8484StubResolver implements Resolver
         if (isset($this->sockets[$uri])) {
             return $this->sockets[$uri];
         }
-
 
         $this->sockets[$uri] = HttpsSocket::connect($this->dohConfig->getArtax(), $nameserver);
 

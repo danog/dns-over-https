@@ -1,6 +1,6 @@
 <?php
 
-namespace Amp\Dns\Test;
+namespace Amp\DoH\Test;
 
 use Amp\Dns\DnsException;
 use Amp\DoH\JsonDecoderFactory;
@@ -40,10 +40,10 @@ class QueryEncoderTest extends TestCase
         $this->assertEquals($output['do'], 0);
         $this->assertEquals($output['ct'], 'application/dns-json');
         $this->assertEquals($output['type'], $response->getQuestionRecords()->getRecordByIndex(0)->getType());
-        $this->assertEquals($output['name'], implode('.', $message->getQuestionRecords()->getRecordByIndex(0)->getName()->getLabels()));
+        $this->assertEquals($output['name'], implode('.', $response->getQuestionRecords()->getRecordByIndex(0)->getName()->getLabels()));
     }
 
-    public function provideValidJsonPayloads()
+    public function provideValidQueryPayloads()
     {
         return [
             [

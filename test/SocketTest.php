@@ -1,6 +1,6 @@
 <?php
 
-namespace Amp\Dns\Test;
+namespace Amp\DoH\Test;
 
 use Amp\Dns;
 use Amp\Loop;
@@ -9,10 +9,12 @@ use Amp\Promise;
 use LibDNS\Messages\Message;
 use LibDNS\Messages\MessageTypes;
 use LibDNS\Records\QuestionFactory;
+use Amp\DoH\Internal\Socket;
+use Amp\DoH\Nameserver;
 
 abstract class SocketTest extends TestCase
 {
-    abstract protected function connect(): Promise;
+    abstract protected function connect(Nameserver $nameserver): Socket;
 
     public function testAsk()
     {
@@ -20,27 +22,14 @@ abstract class SocketTest extends TestCase
             $question = (new QuestionFactory)->create(Dns\Record::A);
             $question->setName("google.com");
 
-            /** @var Dns\Internal\Socket $socket */
-            $socket = yield $this->connect();
+            /** @var DoH\Internal\HttpsSocket $socket */
+            $socket = $this->connect(new Nameserver('https://mozilla.cloudflare-dns.com/dns-query'));
 
             /** @var Message $result */
             $result = yield $socket->ask($question, 5000);
 
             $this->assertInstanceOf(Message::class, $result);
             $this->assertSame(MessageTypes::RESPONSE, $result->getType());
-        });
-    }
-
-    public function testGetLastActivity()
-    {
-        Loop::run(function () {
-            $question = (new QuestionFactory)->create(Dns\Record::A);
-            $question->setName("google.com");
-
-            /** @var Dns\Internal\Socket $socket */
-            $socket = yield $this->connect();
-
-            $this->assertLessThan(\time() + 1, $socket->getLastActivity());
         });
     }
 }

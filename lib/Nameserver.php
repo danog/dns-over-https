@@ -21,7 +21,7 @@ final class Nameserver
         if (parse_url($uri, PHP_URL_SCHEME) !== 'https') {
             throw new ConfigException('Did not provide a valid HTTPS url!');
         }
-        if (!in_array($type, [self::RFC8484_GET, self::RFC8484_POST, self::GOOGLE_JSON], true)) {
+        if (!in_array($type, [self::RFC8484_GET, self::RFC8484_POST, self::GOOGLE_JSON])) {
             throw new ConfigException('Invalid nameserver type provided!');
         }
         $this->uri = $uri;
@@ -48,6 +48,7 @@ final class Nameserver
     public function __toString(): string
     {
         return $this->uri;
+        /*
         switch ($this->type) {
             case self::RFC8484_GET:
                 return "{$this->uri} RFC 8484 GET";
@@ -55,6 +56,6 @@ final class Nameserver
                 return "{$this->uri} RFC 8484 POST";
             case self::GOOGLE_JSON:
                 return "{$this->uri} google JSON";
-        }
+        }*/
     }
 }

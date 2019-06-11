@@ -4,6 +4,7 @@ namespace Amp\DoH\Test;
 
 use Amp\PHPUnit\TestCase;
 use Amp\DoH\Nameserver;
+use Amp\Dns\ConfigException;
 
 class NameserverTest extends TestCase
 {
@@ -43,9 +44,6 @@ class NameserverTest extends TestCase
     {
         return [
             [''],
-            [42],
-            [null],
-            [true],
             ["foobar"],
             ["foobar.com"],
             ["127.1.1"],
@@ -72,14 +70,8 @@ class NameserverTest extends TestCase
             ['mozilla.cloudflare-dns.com/dns-query', Nameserver::GOOGLE_JSON],
             ['google.com/resolve', Nameserver::GOOGLE_JSON, ["Host" => "dns.google.com"]],
 
-            ['https://mozilla.cloudflare-dns.com/dns-query'],
             ['https://mozilla.cloudflare-dns.com/dns-query', 100],
-            ['https://mozilla.cloudflare-dns.com/dns-query', "2"],
             ['https://mozilla.cloudflare-dns.com/dns-query', -1],
-            ['https://mozilla.cloudflare-dns.com/dns-query', null],
-            ['https://mozilla.cloudflare-dns.com/dns-query', "hi"],
-            ['https://mozilla.cloudflare-dns.com/dns-query', "foobar"],
-
         ];
     }
 

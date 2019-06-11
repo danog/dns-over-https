@@ -1,6 +1,6 @@
 <?php
 
-namespace Amp\Dns\Test;
+namespace Amp\DoH\Test;
 
 use Amp\DoH\JsonDecoderFactory;
 use Amp\PHPUnit\TestCase;
@@ -180,22 +180,6 @@ class JsonDecoderTest extends TestCase
                 'xd',
                 0
             ],
-            [
-                null,
-                0
-            ],
-            [
-                [],
-                0
-            ],
-            [
-                0,
-                0
-            ],
-            [
-                new class {},
-                0
-            ]
         ];
     }
 }

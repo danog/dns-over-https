@@ -1,9 +1,11 @@
 <?php
 
-namespace Amp\Dns\Test;
+namespace Amp\DoH\Test;
 
 use Amp\Dns;
 use Amp\Dns\Record;
+use Amp\DoH;
+use Amp\DoH\Nameserver;
 use Amp\Loop;
 use Amp\PHPUnit\TestCase;
 
@@ -11,12 +13,16 @@ class IntegrationTest extends TestCase
 {
     /**
      * @param string $hostname
+     * @param \Amp\DoH\Nameserver $nameserver
      * @group internet
-     * @dataProvider provideHostnames
+     * @dataProvider provideServersAndHostnames
      */
-    public function testResolve($hostname)
+    public function testResolve($hostname, $nameserver)
     {
-        Loop::run(function () use ($hostname) {
+        $nameserver = new Nameserver(...$nameserver);
+        Loop::run(function () use ($hostname, $nameserver) {
+            $DohConfig = new DoH\DoHConfig([$nameserver]);
+            Dns\resolver(new DoH\Rfc8484StubResolver($DohConfig));
             $result = yield Dns\resolve($hostname);
 
             /** @var Record $record */
@@ -31,19 +37,32 @@ class IntegrationTest extends TestCase
 
     /**
      * @group internet
+     * @dataProvider provideServersAndHostnames
      */
-    public function testWorksAfterConfigReload()
+    public function testWorksAfterConfigReload($hostname, $nameserver)
     {
-        Loop::run(function () {
-            yield Dns\query("google.com", Record::A);
+        $nameserver = new Nameserver(...$nameserver);
+        Loop::run(function () use ($hostname, $nameserver) {
+            $DohConfig = new DoH\DoHConfig([$nameserver]);
+            Dns\resolver(new DoH\Rfc8484StubResolver($DohConfig));
+
+            yield Dns\resolve($hostname);
             $this->assertNull(yield Dns\resolver()->reloadConfig());
-            $this->assertInternalType("array", yield Dns\query("example.com", Record::A));
+            $this->assertInternalType("array", yield Dns\resolve($hostname));
         });
     }
 
-    public function testResolveIPv4only()
+    /**
+     * @group internet
+     * @dataProvider provideServers
+     */
+    public function testResolveIPv4only($nameserver)
     {
-        Loop::run(function () {
+        $nameserver = new Nameserver(...$nameserver);
+        Loop::run(function () use ($nameserver) {
+            $DohConfig = new DoH\DoHConfig([$nameserver]);
+            Dns\resolver(new DoH\Rfc8484StubResolver($DohConfig));
+
             $records = yield Dns\resolve("google.com", Record::A);
 
             /** @var Record $record */
@@ -58,9 +77,17 @@ class IntegrationTest extends TestCase
         });
     }
 
-    public function testResolveIPv6only()
+    /**
+     * @group internet
+     * @dataProvider provideServers
+     */
+    public function testResolveIPv6only($nameserver)
     {
-        Loop::run(function () {
+        $nameserver = new Nameserver(...$nameserver);
+        Loop::run(function () use ($nameserver) {
+            $DohConfig = new DoH\DoHConfig([$nameserver]);
+            Dns\resolver(new DoH\Rfc8484StubResolver($DohConfig));
+
             $records = yield Dns\resolve("google.com", Record::AAAA);
 
             /** @var Record $record */
@@ -75,9 +102,17 @@ class IntegrationTest extends TestCase
         });
     }
 
-    public function testPtrLookup()
+    /**
+     * @group internet
+     * @dataProvider provideServers
+     */
+    public function testPtrLookup($nameserver)
     {
-        Loop::run(function () {
+        $nameserver = new Nameserver(...$nameserver);
+        Loop::run(function () use ($nameserver) {
+            $DohConfig = new DoH\DoHConfig([$nameserver]);
+            Dns\resolver(new DoH\Rfc8484StubResolver($DohConfig));
+
             $result = yield Dns\query("8.8.4.4", Record::PTR);
 
             /** @var Record $record */
@@ -95,6 +130,9 @@ class IntegrationTest extends TestCase
     public function testRequestSharing()
     {
         Loop::run(function () {
+            $DohConfig = new DoH\DoHConfig([new DoH\Nameserver('https://mozilla.cloudflare-dns.com/dns-query')]);
+            Dns\resolver(new DoH\Rfc8484StubResolver($DohConfig));
+
             $promise1 = Dns\query("example.com", Record::A);
             $promise2 = Dns\query("example.com", Record::A);
 
@@ -102,7 +140,20 @@ class IntegrationTest extends TestCase
             $this->assertSame(yield $promise1, yield $promise2);
         });
     }
-
+    public function provideServersAndHostnames()
+    {
+        $hostnames = $this->provideHostnames();
+        $servers = $this->provideServers();
+        $result = [];
+        foreach ($hostnames as $args) {
+            $hostname = $args[0];
+            foreach ($servers as $args) {
+                $nameserver = $args[0];
+                $result[] = [$hostname, $nameserver];
+            }
+        }
+        return $result;
+    }
     public function provideHostnames()
     {
         return [
@@ -113,14 +164,19 @@ class IntegrationTest extends TestCase
             ["localhost"],
             ["192.168.0.1"],
             ["::1"],
+            ["google.com"],
+            ["mozilla.cloudflare-dns.com"],
         ];
     }
 
     public function provideServers()
     {
         return [
-            ["8.8.8.8"],
-            ["8.8.8.8:53"],
+            [['https://mozilla.cloudflare-dns.com/dns-query']],
+            [['https://mozilla.cloudflare-dns.com/dns-query', Nameserver::RFC8484_POST]],
+            [['https://mozilla.cloudflare-dns.com/dns-query', Nameserver::RFC8484_GET]],
+            [['https://mozilla.cloudflare-dns.com/dns-query', Nameserver::GOOGLE_JSON]],
+            [['https://google.com/resolve', Nameserver::GOOGLE_JSON, ["Host" => "dns.google.com"]]],
         ];
     }
 }

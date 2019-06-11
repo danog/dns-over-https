@@ -1,6 +1,6 @@
 <?php
 
-namespace Amp\Dns\Test;
+namespace Amp\DoH\Test;
 
 use Amp\PHPUnit\TestCase;
 use Amp\DoH\QueryEncoderFactory;

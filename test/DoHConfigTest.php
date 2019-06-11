@@ -2,17 +2,17 @@
 
 namespace Amp\DoH\Test;
 
+use Amp\Artax\DefaultClient;
+use Amp\Cache\ArrayCache;
 use Amp\Dns\Config;
 use Amp\Dns\ConfigException;
+use Amp\Dns\Rfc1035StubResolver;
+use Amp\Dns\UnixConfigLoader;
+use Amp\Dns\WindowsConfigLoader;
 use Amp\DoH\DoHConfig;
 use Amp\DoH\Nameserver;
-use Amp\PHPUnit\TestCase;
-use Amp\Artax\DefaultClient;
-use Amp\Dns\Rfc1035StubResolver;
 use Amp\DoH\Rfc8484StubResolver;
-use Amp\Cache\ArrayCache;
-use Amp\Dns\WindowsConfigLoader;
-use Amp\Dns\UnixConfigLoader;
+use Amp\PHPUnit\TestCase;
 
 class DoHConfigTest extends TestCase
 {
@@ -88,8 +88,7 @@ class DoHConfigTest extends TestCase
     public function provideValidArtax()
     {
         return [
-            [new DefaultClient()]
-            [null]
+            [new DefaultClient()],
         ];
     }
     /**
@@ -105,12 +104,11 @@ class DoHConfigTest extends TestCase
     public function provideValidResolver()
     {
         return [
-            [new Rfc1035StubResolver()]
-            [null]
+            [new Rfc1035StubResolver()],
         ];
     }
     /**
-     * @param $resolver any invalid resolver instance
+     * @param $resolver \Amp\Dns\Resolver invalid resolver instance
      *
      * @dataProvider provideInvalidResolver
      */
@@ -123,11 +121,11 @@ class DoHConfigTest extends TestCase
     public function provideInvalidResolver()
     {
         return [
-            [new Rfc8484StubResolver(new DoHConfig([new Nameserver('https://mozilla.cloudflare-dns.com/dns-query')]))]
+            [new Rfc8484StubResolver(new DoHConfig([new Nameserver('https://mozilla.cloudflare-dns.com/dns-query')]))],
         ];
     }
     /**
-     * @param $configLoader Valid ConfigLoader instance
+     * @param $configLoader \Amp\Dns\ConfigLoader Valid ConfigLoader instance
      *
      * @dataProvider provideValidConfigLoader
      */
@@ -139,9 +137,9 @@ class DoHConfigTest extends TestCase
     public function provideValidConfigLoader()
     {
         return [
-            [new WindowsConfigLoader()]
-            [new UnixConfigLoader()]
-            [null]
+            [\stripos(PHP_OS, "win") === 0
+                ? new WindowsConfigLoader
+                : new UnixConfigLoader],
         ];
     }
     /**
@@ -157,8 +155,7 @@ class DoHConfigTest extends TestCase
     public function provideValidCache()
     {
         return [
-            [new ArrayCache(5000/* default gc interval */, 256/* size */)]
-            [null]
+            [new ArrayCache(5000/* default gc interval */, 256/* size */)],
         ];
     }
 }
