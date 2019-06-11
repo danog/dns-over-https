@@ -2,6 +2,7 @@
 
 namespace Amp\DoH\Test;
 
+use Amp\Delayed;
 use Amp\Dns;
 use Amp\Dns\Record;
 use Amp\DoH;
@@ -38,18 +39,19 @@ class IntegrationTest extends TestCase
 
     /**
      * @group internet
-     * @dataProvider provideServersAndHostnames
+     * @dataProvider provideServers
      */
-    public function testWorksAfterConfigReload($hostname, $nameserver)
+    public function testWorksAfterConfigReload($nameserver)
     {
         $nameserver = new Nameserver(...$nameserver);
-        Loop::run(function () use ($hostname, $nameserver) {
+        Loop::run(function () use ($nameserver) {
             $DohConfig = new DoH\DoHConfig([$nameserver]);
             Dns\resolver(new DoH\Rfc8484StubResolver($DohConfig));
 
-            yield Dns\resolve($hostname);
+            yield Dns\resolve('google.com');
             $this->assertNull(yield Dns\resolver()->reloadConfig());
-            $this->assertInternalType("array", yield Dns\resolve($hostname));
+            yield new Delayed(500);
+            $this->assertInternalType("array", yield Dns\resolve('google.com'));
         });
         \usleep(500*1000);
     }
@@ -77,6 +79,7 @@ class IntegrationTest extends TestCase
                 );
             }
         });
+        \usleep(500*1000);
     }
 
     /**
@@ -102,6 +105,7 @@ class IntegrationTest extends TestCase
                 );
             }
         });
+        \usleep(500*1000);
     }
 
     /**
@@ -123,6 +127,7 @@ class IntegrationTest extends TestCase
             $this->assertNotNull($record->getTtl());
             $this->assertSame(Record::PTR, $record->getType());
         });
+        \usleep(500*1000);
     }
 
     /**
@@ -141,6 +146,7 @@ class IntegrationTest extends TestCase
             $this->assertSame($promise1, $promise2);
             $this->assertSame(yield $promise1, yield $promise2);
         });
+        \usleep(500*1000);
     }
     public function provideServersAndHostnames()
     {
