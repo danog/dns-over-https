@@ -33,6 +33,7 @@ class IntegrationTest extends TestCase
                 "Server name $hostname did not resolve to a valid IP address"
             );
         });
+        \usleep(500*1000);
     }
 
     /**
@@ -50,6 +51,7 @@ class IntegrationTest extends TestCase
             $this->assertNull(yield Dns\resolver()->reloadConfig());
             $this->assertInternalType("array", yield Dns\resolve($hostname));
         });
+        \usleep(500*1000);
     }
 
     /**
@@ -173,10 +175,10 @@ class IntegrationTest extends TestCase
     {
         return [
             [['https://mozilla.cloudflare-dns.com/dns-query']],
-            [['https://mozilla.cloudflare-dns.com/dns-query', Nameserver::RFC8484_POST]],
-            [['https://mozilla.cloudflare-dns.com/dns-query', Nameserver::RFC8484_GET]],
-            [['https://mozilla.cloudflare-dns.com/dns-query', Nameserver::GOOGLE_JSON]],
             [['https://google.com/resolve', Nameserver::GOOGLE_JSON, ["Host" => "dns.google.com"]]],
+            [['https://mozilla.cloudflare-dns.com/dns-query', Nameserver::RFC8484_GET]],
+            [['https://google.com/resolve', Nameserver::GOOGLE_JSON, ["Host" => "dns.google.com"]]],
+            [['https://mozilla.cloudflare-dns.com/dns-query', Nameserver::GOOGLE_JSON]],
         ];
     }
 }
