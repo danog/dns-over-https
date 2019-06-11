@@ -62,7 +62,7 @@ final class HttpsSocket extends Socket
         switch ($this->nameserver->getType()) {
             case Nameserver::RFC8484_GET:
                 $data = $this->encoder->encode($message);
-                $request = (new Request($this->nameserver->getUri().'?'.http_build_query(['dns' => base64_encode($data), 'ct' => 'application/dns-message']), "GET"))
+                $request = (new Request($this->nameserver->getUri().'?'.\http_build_query(['dns' => \base64_encode($data), 'ct' => 'application/dns-message']), "GET"))
                     ->withHeader('accept', 'application/dns-message')
                     ->withHeaders($this->nameserver->getHeaders());
                 break;

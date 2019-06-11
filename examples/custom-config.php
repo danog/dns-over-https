@@ -24,7 +24,7 @@ $customConfigLoader = new class implements Dns\ConfigLoader {
 };
 
 // Set default resolver to DNS-over-https resolver
-$DohConfig = new DoH\DoHConfig([new DoH\Nameserver('https://cloudflare-dns.com/dns-query')], null, null, $customConfigLoader);
+$DohConfig = new DoH\DoHConfig([new DoH\Nameserver('https://mozilla.cloudflare-dns.com/dns-query')], null, null, $customConfigLoader);
 Dns\resolver(new DoH\Rfc8484StubResolver($DohConfig));
 
 Loop::run(function () {

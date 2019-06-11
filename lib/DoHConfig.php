@@ -11,6 +11,7 @@ use Amp\Dns\Resolver;
 use Amp\Dns\UnixConfigLoader;
 use Amp\Dns\WindowsConfigLoader;
 use Amp\Dns\Rfc1035StubResolver;
+use Amp\Dns\ConfigException;
 
 final class DoHConfig
 {
@@ -29,10 +30,12 @@ final class DoHConfig
         foreach ($nameservers as $nameserver) {
             $this->validateNameserver($nameserver);
         }
+        if ($resolver instanceof Rfc8484StubResolver) {
+            throw new ConfigException("Can't use Rfc8484StubResolver as subresolver for Rfc8484StubResolver");
+        }
 
         $this->nameservers = $nameservers;
         $this->artax = $artax ?? new DefaultClient();
-
         $this->cache = $cache ?? new ArrayCache(5000/* default gc interval */, 256/* size */);
         $this->configLoader = $configLoader ?? (\stripos(PHP_OS, "win") === 0
             ? new WindowsConfigLoader

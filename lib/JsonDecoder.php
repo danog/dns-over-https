@@ -23,6 +23,7 @@ use LibDNS\Records\Types\Type;
 use LibDNS\Records\Types\TypeBuilder;
 use LibDNS\Records\Types\Types;
 use LibDNS\Messages\MessageTypes;
+use Amp\Dns\DnsException;
 
 /**
  * Decodes JSON DNS strings to Message objects
@@ -314,7 +315,15 @@ class JsonDecoder
      */
     public function decode(string $result, int $requestId): Message
     {
-        $result = json_decode($result, true);
+        $result = \json_decode($result, true);
+        if ($result === false) {
+            $error = \json_last_error_msg();
+            throw new DnsException("Could not decode JSON DNS payload ($error)");
+        }
+        if (!isset($result['Status'], $result['TC'], $result['RD'], $result['RA'])) {
+            throw new DnsException('Wrong reply from server, missing required fields');
+        }
+
         $message = $this->messageFactory->create();
         $decodingContext = $this->decodingContextFactory->create($this->packetFactory->create());
 

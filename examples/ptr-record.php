@@ -7,7 +7,7 @@ use Amp\DoH;
 use Amp\Loop;
 
 // Set default resolver to DNS-over-HTTPS resolver
-$DohConfig = new DoH\DoHConfig([new DoH\Nameserver('https://cloudflare-dns.com/dns-query')]);
+$DohConfig = new DoH\DoHConfig([new DoH\Nameserver('https://mozilla.cloudflare-dns.com/dns-query')]);
 Dns\resolver(new DoH\Rfc8484StubResolver($DohConfig));
 
 Loop::run(function () {
