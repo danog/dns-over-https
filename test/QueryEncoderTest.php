@@ -85,19 +85,19 @@ class QueryEncoderTest extends TestCase
                     "Additional": [ ],
                     "edns_client_subnet": "12.34.56.78/0"
                 }',
-                2,
+                2
             ],
             [
                 '{"Status": 0,"TC": false,"RD": true, "RA": true, "AD": true,"CD": false,"Question":[{"name": "example.com.", "type": 28}],"Answer":[{"name": "example.com.", "type": 28, "TTL": 7092, "data": "2606:2800:220:1:248:1893:25c8:1946"}]}',
-                3,
+                3
             ],
             [
                 '{"Status": 0,"TC": false,"RD": true, "RA": true, "AD": false,"CD": false,"Question":[{"name": "daniil.it.", "type": 1}],"Answer":[{"name": "daniil.it.", "type": 1, "TTL": 300, "data": "104.27.146.166"},{"name": "daniil.it.", "type": 1, "TTL": 300, "data": "104.27.147.166"}]}',
-                3,
+                3
             ],
             [
                 '{"Status": 0,"TC": false,"RD": true, "RA": true, "AD": false,"CD": false,"Question":[{"name": "amphp.org.", "type": 15}],"Answer":[{"name": "amphp.org.", "type": 15, "TTL": 86400, "data": "0 mail.negativeion.net."}]}',
-                3,
+                3
             ],
         ];
     }
@@ -162,7 +162,7 @@ class QueryEncoderTest extends TestCase
                         "edns_client_subnet": "12.34.56.78/0"
                     }',
                     2,
-                ),
+                )
             ],
             [
                 $decoder->decode(
@@ -201,7 +201,7 @@ class QueryEncoderTest extends TestCase
                         "edns_client_subnet": "12.34.56.78/0"
                     }',
                     2,
-                ),
+                )
             ],
         ];
     }
