@@ -1,6 +1,6 @@
 {
-    "name": "amphp/dns-over-https",
-    "homepage": "https://github.com/amphp/dns-over-https",
+    "name": "danog/dns-over-https",
+    "homepage": "https://github.com/danog/dns-over-https",
     "description": "Async DNS-over-HTTPS resolution for Amp.",
     "keywords": [
         "dns",
