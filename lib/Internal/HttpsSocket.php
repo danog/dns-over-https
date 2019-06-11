@@ -5,6 +5,7 @@ namespace Amp\DoH\Internal;
 use Amp;
 use Amp\Artax\Client;
 use Amp\Artax\Request;
+use Amp\Dns\DnsException;
 use Amp\DoH\JsonDecoderFactory;
 use Amp\DoH\Nameserver;
 use Amp\DoH\QueryEncoderFactory;
@@ -13,7 +14,6 @@ use LibDNS\Decoder\DecoderFactory;
 use LibDNS\Encoder\EncoderFactory;
 use LibDNS\Messages\Message;
 use function Amp\call;
-use Amp\Dns\DnsException;
 
 /** @internal */
 final class HttpsSocket extends Socket
