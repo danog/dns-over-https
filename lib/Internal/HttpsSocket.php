@@ -13,6 +13,7 @@ use LibDNS\Decoder\DecoderFactory;
 use LibDNS\Encoder\EncoderFactory;
 use LibDNS\Messages\Message;
 use function Amp\call;
+use Amp\Dns\DnsException;
 
 /** @internal */
 final class HttpsSocket extends Socket
@@ -81,7 +82,12 @@ final class HttpsSocket extends Socket
         }
         $response = $this->httpClient->request($request);
         return call(function () use ($response, $id) {
-            $response = yield (yield $response)->getBody();
+            $response = yield $response;
+            if ($response->getStatus() !== 200) {
+                throw new DnsException("HTTP result !== 200: ".$response->getReason());
+            }
+            $response = yield $response->getBody();
+
 
             switch ($this->nameserver->getType()) {
                 case Nameserver::RFC8484_GET:
