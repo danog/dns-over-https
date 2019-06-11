@@ -108,23 +108,6 @@ class DoHConfigTest extends TestCase
         ];
     }
     /**
-     * @param $resolver \Amp\Dns\Resolver invalid resolver instance
-     *
-     * @dataProvider provideInvalidResolver
-     */
-    public function testRejectsInvalidResolver($resolver)
-    {
-        $this->expectException(ConfigException::class);
-        new DoHConfig([new Nameserver('https://cloudflare-dns.com/dns-query')], null, $resolver);
-    }
-
-    public function provideInvalidResolver()
-    {
-        return [
-            [new Rfc8484StubResolver(new DoHConfig([new Nameserver('https://mozilla.cloudflare-dns.com/dns-query')]))],
-        ];
-    }
-    /**
      * @param $configLoader \Amp\Dns\ConfigLoader Valid ConfigLoader instance
      *
      * @dataProvider provideValidConfigLoader

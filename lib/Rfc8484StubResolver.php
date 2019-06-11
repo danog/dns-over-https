@@ -19,6 +19,7 @@ use function Amp\Dns\normalizeName;
 use LibDNS\Messages\Message;
 use LibDNS\Records\Question;
 use LibDNS\Records\QuestionFactory;
+use Amp\Dns\ConfigException;
 
 final class Rfc8484StubResolver implements Resolver
 {
@@ -46,15 +47,19 @@ final class Rfc8484StubResolver implements Resolver
     private $pendingQueries = [];
 
     /** @var \Amp\Dns\Rfc1035StubResolver */
-    private $simpleResolver;
+    private $subResolver;
 
     public function __construct(DoHConfig $config)
     {
+        $resolver = $config->getSubResolver();
+        if ($resolver instanceof Rfc8484StubResolver) {
+            throw new ConfigException("Can't use Rfc8484StubResolver as subresolver for Rfc8484StubResolver");
+        }
+
         $this->cache = $config->getCache();
         $this->configLoader = $config->getConfigLoader();
-        $this->simpleResolver = $config->getSimpleResolver();
+        $this->subResolver = $resolver;
         $this->dohConfig = $config;
-
         $this->questionFactory = new QuestionFactory;
     }
 
@@ -115,7 +120,7 @@ final class Rfc8484StubResolver implements Resolver
                 // See https://github.com/amphp/dns/issues/58.
                 // See https://bugs.php.net/bug.php?id=74840.
 
-                $records = yield $this->simpleResolver->resolve($name, $typeRestriction);
+                $records = yield $this->subResolver->resolve($name, $typeRestriction);
                 return $records;
             }
 
@@ -173,6 +178,8 @@ final class Rfc8484StubResolver implements Resolver
      */
     public function reloadConfig(): Promise
     {
+        $this->subResolver->reloadConfig();
+        
         if ($this->pendingConfig) {
             return $this->pendingConfig;
         }

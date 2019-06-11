@@ -17,7 +17,7 @@ final class DoHConfig
 {
     private $nameservers;
     private $artax;
-    private $simpleResolver;
+    private $subResolver;
     private $configLoader;
     private $cache;
 
@@ -30,9 +30,6 @@ final class DoHConfig
         foreach ($nameservers as $nameserver) {
             $this->validateNameserver($nameserver);
         }
-        if ($resolver instanceof Rfc8484StubResolver) {
-            throw new ConfigException("Can't use Rfc8484StubResolver as subresolver for Rfc8484StubResolver");
-        }
 
         $this->nameservers = $nameservers;
         $this->artax = $artax ?? new DefaultClient();
@@ -40,7 +37,7 @@ final class DoHConfig
         $this->configLoader = $configLoader ?? (\stripos(PHP_OS, "win") === 0
             ? new WindowsConfigLoader
             : new UnixConfigLoader);
-        $this->simpleResolver = $resolver ?? new Rfc1035StubResolver(null, $this->configLoader);
+        $this->subResolver = $resolver ?? new Rfc1035StubResolver(null, $this->configLoader);
 
     }
 
@@ -79,8 +76,8 @@ final class DoHConfig
     {
         return $this->configLoader;
     }
-    public function getSimpleResolver(): Resolver
+    public function getSubResolver(): Resolver
     {
-        return $this->simpleResolver;
+        return $this->subResolver;
     }
 }

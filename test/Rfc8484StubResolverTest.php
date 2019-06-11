@@ -9,6 +9,8 @@ use Amp\DoH;
 use Amp\DoH\Rfc8484StubResolver;
 use Amp\Loop;
 use Amp\PHPUnit\TestCase;
+use Amp\Dns\Rfc1035StubResolver;
+use Amp\Dns\ConfigException;
 
 class Rfc8484StubResolverTest extends TestCase
 {
@@ -46,6 +48,22 @@ class Rfc8484StubResolverTest extends TestCase
         Loop::run(function () {
             $this->expectException(InvalidNameException::class);
             yield $this->getResolver()->resolve("go@gle.com", Record::A);
+        });
+    }
+    public function testValidSubResolver()
+    {
+        Loop::run(function () {
+            $DohConfig = new DoH\DoHConfig([new DoH\Nameserver('https://mozilla.cloudflare-dns.com/dns-query')], null, new Rfc1035StubResolver());
+            $this->assertInstanceOf(Rfc8484StubResolver::class, new Rfc8484StubResolver($DohConfig));
+        });
+    }
+    public function testInvalidSubResolver()
+    {
+        Loop::run(function () {
+            $DohConfig = new DoH\DoHConfig([new DoH\Nameserver('https://mozilla.cloudflare-dns.com/dns-query')]);
+            $DohConfig = new DoH\DoHConfig([new DoH\Nameserver('https://mozilla.cloudflare-dns.com/dns-query')], null, new Rfc8484StubResolver($DohConfig));
+            $this->expectException(ConfigException::class);
+            new Rfc8484StubResolver($DohConfig);
         });
     }
 }
