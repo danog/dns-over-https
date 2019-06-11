@@ -161,7 +161,7 @@ class QueryEncoderTest extends TestCase
                         "Additional": [ ],
                         "edns_client_subnet": "12.34.56.78/0"
                     }',
-                    2,
+                    2
                 )
             ],
             [
@@ -200,7 +200,7 @@ class QueryEncoderTest extends TestCase
                         "Additional": [ ],
                         "edns_client_subnet": "12.34.56.78/0"
                     }',
-                    2,
+                    2
                 )
             ],
         ];
