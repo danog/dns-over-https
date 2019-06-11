@@ -1,28 +1,61 @@
 ---
-title: Asynchronous DNS Resolution
+title: Asynchronous secure DNS-over-HTTPS Resolution
 permalink: /
 ---
-`amphp/dns` provides asynchronous DNS name resolution for [Amp](http://amphp.org/amp).
+`danog/dns-over-https` provides asynchronous DNS name resolution for [Amp](http://amphp.org/amp).
 
 ## Installation
 
 ```bash
-composer require amphp/dns
+composer require danog/dns-over-https
 ```
 
 ## Usage
 
+`danog/dns-over-https` provides asynchronous and secure DNS-over-HTTPS name resolution for [Amp](https://github.com/amphp/amp).  
+Supports [RFC 8484](https://tools.ietf.org/html/rfc8484#section-10) POST and GET syntaxes as well as [Google's proprietary JSON DNS format](https://developers.google.com/speed/public-dns/docs/dns-over-https).  
+Supports passing custom headers for [domain fronting](https://en.wikipedia.org/wiki/Domain_fronting) with google DNS.  
+
 ### Configuration
 
-`amphp/dns` automatically detects the system configuration and uses it. On Unix-like systems it reads `/etc/resolv.conf` and respects settings for nameservers, timeouts, and attempts. On Windows it looks up the correct entries in the Windows Registry and takes the listed nameservers. You can pass a custom `ConfigLoader` instance to `Rfc1035StubResolver` to load another configuration, such as a static config.
+`danog/dns-over-https` requires you provide a `DoHConfig` object to the resolver.  
+`DoHConfig` requires an (array of) `Nameserver` objects, with a list of `DNS-over-HTTPS` servers to use:  
 
-It respects the system's hosts file on Unix and Windows based systems, so it works just fine in environments like Docker with named containers.
+```php
+use Amp\DoH;
+use Amp\Dns;
 
-The package uses a global default resolver with can be accessed and changed via `Amp\Dns\resolver()`. If an argument other than `null` is given, the given resolver is used as global instance. The instance is automatically bound to the current event loop. If you replace the event loop via `Amp\Loop::set()`, then you have to set a new global resolver.
+$nameservers = [];
 
-Usually you don't have to change the resolver. If you want to use a custom configuration for a certain request, you can create a new resolver instance and use that instead of changing the global one.
+// Defaults to DoH\Nameserver::RFC8484_POST
+$nameservers []= new DoH\Nameserver('https://mozilla.cloudflare-dns.com/dns-query'); 
+
+$nameservers []= new DoH\Nameserver('https://mozilla.cloudflare-dns.com/dns-query', DoH\Nameserver::RFC8484_POST);
+$nameservers []= new DoH\Nameserver('https://mozilla.cloudflare-dns.com/dns-query', DoH\Nameserver::RFC8484_GET);
+$nameservers []= new DoH\Nameserver('https://mozilla.cloudflare-dns.com/dns-query', DoH\Nameserver::GOOGLE_JSON);
+$nameservers []= new DoH\Nameserver('https://dns.google.com/resolve', DoH\Nameserver::GOOGLE_JSON);
+$nameservers []= new DoH\Nameserver('https://google.com/resolve', DoH\Nameserver::GOOGLE_JSON, ['Host' => 'https://dns.google.com']);
+
+$DohConfig = new DoH\DoHConfig($nameservers);
+
+// Set default resolver for all AMPHP apps to DNS-over-HTTPS resolver
+Dns\resolver(new DoH\Rfc8484StubResolver($DohConfig));
+```
+
+In the last example, [domain fronting](https://en.wikipedia.org/wiki/Domain_fronting), useful to bypass censorship in non-free countries: from the outside, it looks like the DoH client is connecting to `https://google.com`, but by sending a custom Host HTTP header to the server after the TLS handshake is finished, the server that actually replies is `https://dns.google.com` (this is only possible if both servers are behind a common CDN that allows domain fronting, like google's CDN).  
+In normal conditions, it is recommended that you use mozilla+cloudflare's DoH endpoint (`https://mozilla.cloudflare-dns.com/dns-query`), for greater privacy.  
+
+Other parameters that can be passed to the DoHConfig constructor are:  
+```php
+public function __construct(array $nameservers, \Amp\Artax\Client $artax = null, \Amp\Dns\Resolver $resolver = null, \Amp\Dns\ConfigLoader $configLoader = null, \Amp\Cache\Cache $cache = null);
+```
+
+You can provide a custom HTTP client to use for resolution, or use a custom subresolver (the subresolver is used to make the first and only plaintext DNS request to obtain the address of the DoH nameserver), or use a [custom configuration](https://amphp.org/dns/#configuration) for the DoH client (and the subresolver, too, if the configuration is provided but the resolver isn't).  
+The last parameter can be a custom async caching object.  
 
 ### Address Resolution
+
+To resolve addresses using `dns-over-https` first set the global DNS resolver as explained in the [configuration section](#configuration), or use an instance of `Rfc8484StubResolver` instead of `Rfc1035StubResolver`.  
 
 `Amp\Dns\resolve` provides hostname to IP address resolution. It returns an array of IPv4 and IPv6 addresses by default. The type of IP addresses returned can be restricted by passing a second argument with the respective type.
 
@@ -43,6 +76,8 @@ $records = yield Amp\Dns\resolve("github.com", Amp\Dns\Record::A);
 
 ### Custom Queries
 
+To resolve addresses using `dns-over-https` first set the global DNS resolver as explained in the [configuration section](#configuration), or use an instance of `Rfc8484StubResolver` instead of `Rfc1035StubResolver`.  
+
 `Amp\Dns\query` supports the various other DNS record types such as `MX`, `PTR`, or `TXT`. It automatically rewrites passed IP addresses for `PTR` lookups.
  
 ```php
@@ -57,11 +92,11 @@ $records = Amp\Dns\query("8.8.8.8", Amp\Dns\Record::PTR);
 
 ### Caching
 
-The `Rfc1035StubResolver` caches responses by default in an `Amp\Cache\ArrayCache`. You can set any other `Amp\Cache\Cache` implementation by creating a custom instance of `Rfc1035StubResolver` and setting that via `Amp\Dns\resolver()`, but it's usually unnecessary. If you have a lot of very short running scripts, you might want to consider using a local DNS resolver with a cache instead of setting a custom cache implementation, such as `dnsmasq`. 
+The `Rfc8484StubResolver` caches responses by default in an `Amp\Cache\ArrayCache`. You can set any other `Amp\Cache\Cache` implementation by creating a custom instance of `Rfc8484StubResolver` and setting that via `Amp\Dns\resolver()`, but it's usually unnecessary. If you have a lot of very short running scripts, you might want to consider using a local DNS resolver with a cache instead of setting a custom cache implementation, such as `dnsmasq`. 
 
 ### Reloading Configuration
 
-The `Rfc1035StubResolver` (which is the default resolver shipping with that package) will cache the configuration of `/etc/resolv.conf` / the Windows Registry and the read host files by default. If you wish to reload them, you can set a periodic timer that requests a background reload of the configuration.
+The subresolver (which is the resolver set in the `DoHConfig`, `Rfc1035StubResolver` by default) will cache the configuration of `/etc/resolv.conf` / the Windows Registry and the read host files by default. If you wish to reload them, you can set a periodic timer that requests a background reload of the configuration.
 
 ```php
 Loop::repeat(60000, function () use ($resolver) {
@@ -69,5 +104,3 @@ Loop::repeat(60000, function () use ($resolver) {
 });
 ```
 
-{:.note}
-> The above code relies on the resolver not being changed. `reloadConfig` is specific to `Rfc1035StubResolver` and is not part of the `Resolver` interface. You might want to guard the reloading with an `instanceof` check or manually set a `Rfc1035StubResolver` instance on startup to be sure it's an instance of `Rfc1035StubResolver`.
