@@ -7,6 +7,7 @@ use Amp\DoH;
 use Amp\Loop;
 use Amp\Promise;
 use Amp\DoH\Nameserver;
+use function Amp\call;
 
 $customConfigLoader = new class implements Dns\ConfigLoader {
     public function loadConfig(): Promise
@@ -22,8 +23,9 @@ $customConfigLoader = new class implements Dns\ConfigLoader {
     }
 };
 
-$DohConfig = new DoH\DoHConfig([new DoH\Nameserver('https://cloudflare-dns.com/dns-query', Nameserver::GOOGLE_JSON)]);
-Dns\resolver(new DoH\Rfc8484StubResolver($DohConfig, null, $customConfigLoader));
+// Set default resolver to DNS-over-https resolver
+$DohConfig = new DoH\DoHConfig([new DoH\Nameserver('https://cloudflare-dns.com/dns-query')], null, null, $customConfigLoader);
+Dns\resolver(new DoH\Rfc8484StubResolver($DohConfig));
 
 Loop::run(function () {
     $hostname = "amphp.org";
@@ -34,3 +36,4 @@ Loop::run(function () {
         pretty_print_error($hostname, $e);
     }
 });
+

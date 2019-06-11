@@ -31,9 +31,6 @@ final class HttpsSocket extends Socket
     /** @var \LibDNS\Decoder\Decoder */
     private $decoder;
 
-    /** @var \Amp\Artax\Response[] */
-    private $queue;
-
     /** @var \Amp\Deferred */
     private $responseDeferred;
 
@@ -47,8 +44,6 @@ final class HttpsSocket extends Socket
         $this->httpClient = $artax;
         $this->nameserver = $nameserver;
 
-        $this->queue = new \SplQueue;
-
         if ($nameserver->getType() !== Nameserver::GOOGLE_JSON) {
             $this->encoder = (new EncoderFactory)->create();
             $this->decoder = (new DecoderFactory)->create();
@@ -60,14 +55,14 @@ final class HttpsSocket extends Socket
         parent::__construct();
     }
     
-    protected function send(Message $message): Promise
+    protected function resolve(Message $message): Promise
     {
         $id = $message->getID();
 
         switch ($this->nameserver->getType()) {
             case Nameserver::RFC8484_GET:
                 $data = $this->encoder->encode($message);
-                $request = (new Request($this->nameserver->getUri().'?'.http_build_query(['dns' => $data]), "GET"))
+                $request = (new Request($this->nameserver->getUri().'?'.http_build_query(['dns' => base64_encode($data), 'ct' => 'application/dns-message']), "GET"))
                     ->withHeader('accept', 'application/dns-message')
                     ->withHeaders($this->nameserver->getHeaders());
                 break;
@@ -86,54 +81,16 @@ final class HttpsSocket extends Socket
                     ->withHeaders($this->nameserver->getHeaders());
                 break;
         }
-
-        $deferred = new Deferred;
-        $promise = $this->httpClient->request($request);
-        $promise->onResolve(function (\Throwable $error = null, Response $result = null) use ($deferred, $id) {
-            if ($error) {
-                $deferred->fail($error);
-                return;
-            }
-            if ($result) {
-                $this->queueResponse($result, $id);
-                $deferred->resolve();
-            }
-        });
-
-        return $deferred->promise();
-    }
-    public function queueResponse(Response $result, int $id)
-    {
-        $this->queue->push([$result, $id]);
-        if ($this->responseDeferred) {
-            $this->responseDeferred->resolve();
-            //Loop::defer([$this->responseDeferred, 'resolve']);
-        }
-    }
-    protected function receive(): Promise
-    {
-        return call(function () {
-            /** @var $result \Amp\Artax\Response */
-            while ($this->queue->isEmpty()) {
-                if (!$this->responseDeferred) {
-                    $this->responseDeferred = new Deferred;
-                }
-                yield $this->responseDeferred->promise();
-                $this->responseDeferred = new Deferred;
-
-                list($result, $requestId) = $this->queue->shift();
-            }
-
-            list($result, $requestId) = $this->queue->shift();
-
-            $result = yield $result->getBody();
+        $response = $this->httpClient->request($request);
+        return call(function () use ($response, $id) {
+            $response = yield (yield $response)->getBody();
 
             switch ($this->nameserver->getType()) {
                 case Nameserver::RFC8484_GET:
                 case Nameserver::RFC8484_POST:
-                    return $this->decoder->decode($result);
+                    return $this->decoder->decode($response);
                 case Nameserver::GOOGLE_JSON:
-                    return $this->decoder->decode($result, $requestId);
+                    return $this->decoder->decode($response, $id);
             }
         });
     }

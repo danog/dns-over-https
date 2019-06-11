@@ -23,6 +23,7 @@ use Amp\Dns\Resolver;
 use Amp\DoH\Internal\HttpsSocket;
 use Amp\Dns\ConfigLoader;
 use Amp\Dns\Rfc1035StubResolver;
+use function Amp\Dns\normalizeName;
 
 final class Rfc8484StubResolver implements Resolver
 {
@@ -52,14 +53,12 @@ final class Rfc8484StubResolver implements Resolver
     /** @var \Amp\Dns\Rfc1035StubResolver */
     private $simpleResolver;
 
-    public function __construct(DoHConfig $config, Cache $cache = null, ConfigLoader $configLoader = null)
+    public function __construct(DoHConfig $config)
     {
-        $this->cache = $cache ?? new ArrayCache(5000/* default gc interval */, 256/* size */);
-        $this->configLoader = $configLoader ?? (\stripos(PHP_OS, "win") === 0
-            ? new WindowsConfigLoader()
-            : new UnixConfigLoader);
+        $this->cache = $config->getCache();
+        $this->configLoader = $config->getConfigLoader();
+        $this->simpleResolver = $config->getSimpleResolver();
         $this->dohConfig = $config;
-        $this->simpleResolver = new Rfc1035StubResolver(null, $this->configLoader);
 
         $this->questionFactory = new QuestionFactory;
     }
@@ -284,7 +283,7 @@ final class Rfc8484StubResolver implements Resolver
 
                     $i = ++$attempt % \count($nameservers);
                     $nameserver = $nameservers[$i];
-                    $socket = yield $this->getSocket($nameserver);
+                    $socket = $this->getSocket($nameserver);
                     continue;
                 }
             }

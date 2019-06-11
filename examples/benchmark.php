@@ -2,18 +2,23 @@
 
 require __DIR__ . "/_bootstrap.php";
 
+use Amp\DoH;
 use Amp\Dns;
 use Amp\Loop;
 
 print "Downloading top 500 domains..." . PHP_EOL;
 
-$domains = \file_get_contents("https://moz.com/top500/domains/csv");
+$domains = \file_get_contents("https://moz.com/top-500/download?table=top500Domains");
 $domains = \array_map(function ($line) {
     return \trim(\explode(",", $line)[1], '"/');
 }, \array_filter(\explode("\n", $domains)));
 
 // Remove "URL" header
 \array_shift($domains);
+
+// Set default resolver to DNS-over-HTTPS resolver
+$DohConfig = new DoH\DoHConfig([new DoH\Nameserver('https://cloudflare-dns.com/dns-query')]);
+Dns\resolver(new DoH\Rfc8484StubResolver($DohConfig));
 
 Loop::run(function () use ($domains) {
     print "Starting sequential queries...\r\n\r\n";

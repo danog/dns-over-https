@@ -3,20 +3,19 @@
 namespace Amp\DoH\Internal;
 
 use Amp;
-use Amp\ByteStream\ResourceInputStream;
-use Amp\ByteStream\ResourceOutputStream;
+use Amp\Artax\Client;
+use Amp\Artax\Response;
 use Amp\ByteStream\StreamException;
 use Amp\Deferred;
 use Amp\Dns\DnsException;
 use Amp\Dns\TimeoutException;
+use Amp\DoH\Nameserver;
 use Amp\Promise;
+use function Amp\call;
 use LibDNS\Messages\Message;
 use LibDNS\Messages\MessageFactory;
 use LibDNS\Messages\MessageTypes;
 use LibDNS\Records\Question;
-use function Amp\call;
-use Amp\Artax\Client;
-use Amp\DoH\Nameserver;
 
 /** @internal */
 abstract class Socket
@@ -31,9 +30,6 @@ abstract class Socket
 
     /** @var callable */
     private $onResolve;
-
-    /** @var bool */
-    private $receiving = false;
 
     /** @var array Queued requests if the number of concurrent requests is too large. */
     private $queue = [];
@@ -51,21 +47,13 @@ abstract class Socket
      *
      * @return Promise<int>
      */
-    abstract protected function send(Message $message): Promise;
-
-    /**
-     * @return Promise<Message>
-     */
-    abstract protected function receive(): Promise;
-
+    abstract protected function resolve(Message $message): Promise;
 
     protected function __construct()
     {
         $this->messageFactory = new MessageFactory;
 
         $this->onResolve = function (\Throwable $exception = null, Message $message = null) {
-            $this->receiving = false;
-
             if ($exception) {
                 $this->error($exception);
                 return;
@@ -80,12 +68,6 @@ abstract class Socket
                 $deferred = $this->pending[$id]->deferred;
                 unset($this->pending[$id]);
                 $deferred->resolve($message);
-            }
-
-            if (empty($this->pending)) {
-            } elseif (!$this->receiving) {
-                $this->receiving = true;
-                $this->receive()->onResolve($this->onResolve);
             }
         };
     }
@@ -110,7 +92,8 @@ abstract class Socket
             } while (isset($this->pending[$id]));
 
             $deferred = new Deferred;
-            $pending = new class {
+            $pending = new class
+            {
                 use Amp\Struct;
 
                 public $deferred;
@@ -124,18 +107,14 @@ abstract class Socket
             $message = $this->createMessage($question, $id);
 
             try {
-                yield $this->send($message);
+                $response = $this->resolve($message);
             } catch (StreamException $exception) {
                 $exception = new DnsException("Sending the request failed", 0, $exception);
                 $this->error($exception);
                 throw $exception;
             }
 
-
-            if (!$this->receiving) {
-                $this->receiving = true;
-                $this->receive()->onResolve($this->onResolve);
-            }
+            $response->onResolve($this->onResolve);
 
             try {
                 // Work around an OPCache issue that returns an empty array with "return yield ...",
@@ -146,7 +125,6 @@ abstract class Socket
                 $result = yield Promise\timeout($deferred->promise(), $timeout);
             } catch (Amp\TimeoutException $exception) {
                 unset($this->pending[$id]);
-
                 throw new TimeoutException("Didn't receive a response within {$timeout} milliseconds.");
             } finally {
                 if ($this->queue) {
@@ -161,14 +139,12 @@ abstract class Socket
 
     private function error(\Throwable $exception)
     {
-        $this->close();
-
         if (empty($this->pending)) {
             return;
         }
 
         if (!$exception instanceof DnsException) {
-            $message = "Unexpected error during resolution: " . $exception->getMessage();
+            $message = "Unexpected error during resolution: ".$exception->getMessage();
             $exception = new DnsException($message, 0, $exception);
         }
 
@@ -181,7 +157,6 @@ abstract class Socket
             $deferred->fail($exception);
         }
     }
-
 
     final protected function createMessage(Question $question, int $id): Message
     {

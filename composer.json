@@ -59,10 +59,7 @@
     "autoload": {
         "psr-4": {
             "Amp\\DoH\\": "lib"
-        },
-        "files": [
-            "lib/functions.php"
-        ]
+        }
     },
     "autoload-dev": {
         "psr-4": {
