@@ -74,7 +74,7 @@ final class Rfc8484StubResolver implements Resolver
                 try {
                     yield $this->reloadConfig();
                 } catch (ConfigException $e) {
-                    $this->config = new Config([], []);
+                    $this->config = new Config(['0.0.0.0'], []);
                 }
             }
 
@@ -232,7 +232,7 @@ final class Rfc8484StubResolver implements Resolver
                 try {
                     yield $this->reloadConfig();
                 } catch (ConfigException $e) {
-                    $this->config = new Config([], []);
+                    $this->config = new Config(['0.0.0.0'], []);
                 }
             }
 
