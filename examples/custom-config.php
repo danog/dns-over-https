@@ -1,12 +1,13 @@
 <?php
 
-require __DIR__ . "/_bootstrap.php";
+require __DIR__."/_bootstrap.php";
 
 use Amp\Dns;
 use Amp\DoH;
 use Amp\Loop;
 use Amp\Promise;
 
+// Used only by the subresolver for resolving the DoH nameserver URL
 $customConfigLoader = new class implements Dns\ConfigLoader {
     public function loadConfig(): Promise
     {
@@ -22,7 +23,16 @@ $customConfigLoader = new class implements Dns\ConfigLoader {
 };
 
 // Set default resolver to DNS-over-https resolver
-$DohConfig = new DoH\DoHConfig([new DoH\Nameserver('https://mozilla.cloudflare-dns.com/dns-query')], null, null, $customConfigLoader);
+$DohConfig = new DoH\DoHConfig(
+    [
+        new DoH\Nameserver('https://daniil.it/dns-query'),
+        new DoH\Nameserver('https://mozilla.nonexistant-dns.com/dns-query'),
+        new DoH\Nameserver('https://mozilla.cloudflare-dns.com/dns-query'), // Will fallback to this
+    ],
+    null,
+    null,
+    $customConfigLoader
+);
 Dns\resolver(new DoH\Rfc8484StubResolver($DohConfig));
 
 Loop::run(function () {

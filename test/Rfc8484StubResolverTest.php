@@ -66,4 +66,21 @@ class Rfc8484StubResolverTest extends TestCase
             new Rfc8484StubResolver($DohConfig);
         });
     }
+
+    public function testInvalidNameserverFallback()
+    {
+        Loop::run(function () {
+            $DohConfig = new DoH\DoHConfig(
+                [
+                    new DoH\Nameserver('https://google.com/wrong-uri'),
+                    new DoH\Nameserver('https://google.com/wrong-uri'),
+                    new DoH\Nameserver('https://nonexistant-dns.com/dns-query'),
+                    new DoH\Nameserver('https://mozilla.cloudflare-dns.com/dns-query'),
+                ]
+            );
+            $resolver = new Rfc8484StubResolver($DohConfig);
+            $this->assertInstanceOf(Rfc8484StubResolver::class, $resolver);
+            yield $resolver->resolve('google.com');
+        });
+    }
 }

@@ -259,7 +259,23 @@ final class Rfc8484StubResolver implements Resolver
                     $attemptDescription[] = $nameserver;
 
                     /** @var Message $response */
-                    $response = yield $socket->ask($question, $this->config->getTimeout());
+                    try {
+                        $response = yield $socket->ask($question, $this->config->getTimeout());
+                    } catch (DoHException $e) {
+                        // Defer call, because it might interfere with the unreference() call in Internal\Socket otherwise
+
+                        $i = ++$attempt % \count($nameservers);
+                        $nameserver = $nameservers[$i];
+                        $socket = $this->getSocket($nameserver);
+                        continue;
+                    } catch (NoRecordException $e) {
+                        // Defer call, because it might interfere with the unreference() call in Internal\Socket otherwise
+
+                        $i = ++$attempt % \count($nameservers);
+                        $nameserver = $nameservers[$i];
+                        $socket = $this->getSocket($nameserver);
+                        continue;
+                    }
                     $this->assertAcceptableResponse($response);
 
                     if ($response->isTruncated()) {

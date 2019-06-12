@@ -9,6 +9,7 @@ use Amp\ByteStream\StreamException;
 use Amp\Deferred;
 use Amp\Dns\DnsException;
 use Amp\Dns\TimeoutException;
+use Amp\DoH\DoHException;
 use Amp\DoH\Nameserver;
 use Amp\Promise;
 use LibDNS\Messages\Message;
@@ -142,7 +143,7 @@ abstract class Socket
             return;
         }
 
-        if (!$exception instanceof DnsException) {
+        if (!$exception instanceof DnsException && !$exception instanceof DoHException) {
             $message = "Unexpected error during resolution: ".$exception->getMessage();
             $exception = new DnsException($message, 0, $exception);
         }

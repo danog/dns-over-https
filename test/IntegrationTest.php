@@ -17,11 +17,13 @@ class IntegrationTest extends TestCase
      * @group internet
      * @dataProvider provideServersAndHostnames
      */
-    public function testResolve($hostname, $nameserver)
+    public function testResolve($hostname, $nameservers)
     {
-        $nameserver = new Nameserver(...$nameserver);
-        Loop::run(function () use ($hostname, $nameserver) {
-            $DohConfig = new DoH\DoHConfig([$nameserver]);
+        foreach ($nameservers as &$nameserver) {
+            $nameserver = new Nameserver(...$nameserver);
+        }
+        Loop::run(function () use ($hostname, $nameservers) {
+            $DohConfig = new DoH\DoHConfig($nameservers);
             Dns\resolver(new DoH\Rfc8484StubResolver($DohConfig));
             $result = yield Dns\resolve($hostname);
 
@@ -39,11 +41,13 @@ class IntegrationTest extends TestCase
      * @group internet
      * @dataProvider provideServersAndHostnames
      */
-    public function testWorksAfterConfigReload($hostname, $nameserver)
+    public function testWorksAfterConfigReload($hostname, $nameservers)
     {
-        $nameserver = new Nameserver(...$nameserver);
-        Loop::run(function () use ($hostname, $nameserver) {
-            $DohConfig = new DoH\DoHConfig([$nameserver]);
+        foreach ($nameservers as &$nameserver) {
+            $nameserver = new Nameserver(...$nameserver);
+        }
+        Loop::run(function () use ($hostname, $nameservers) {
+            $DohConfig = new DoH\DoHConfig($nameservers);
             Dns\resolver(new DoH\Rfc8484StubResolver($DohConfig));
 
             yield Dns\resolve($hostname);
@@ -56,11 +60,13 @@ class IntegrationTest extends TestCase
      * @group internet
      * @dataProvider provideServers
      */
-    public function testResolveIPv4only($nameserver)
+    public function testResolveIPv4only($nameservers)
     {
-        $nameserver = new Nameserver(...$nameserver);
-        Loop::run(function () use ($nameserver) {
-            $DohConfig = new DoH\DoHConfig([$nameserver]);
+        foreach ($nameservers as &$nameserver) {
+            $nameserver = new Nameserver(...$nameserver);
+        }
+        Loop::run(function () use ($nameservers) {
+            $DohConfig = new DoH\DoHConfig($nameservers);
             Dns\resolver(new DoH\Rfc8484StubResolver($DohConfig));
 
             $records = yield Dns\resolve("google.com", Record::A);
@@ -81,11 +87,13 @@ class IntegrationTest extends TestCase
      * @group internet
      * @dataProvider provideServers
      */
-    public function testResolveIPv6only($nameserver)
+    public function testResolveIPv6only($nameservers)
     {
-        $nameserver = new Nameserver(...$nameserver);
-        Loop::run(function () use ($nameserver) {
-            $DohConfig = new DoH\DoHConfig([$nameserver]);
+        foreach ($nameservers as &$nameserver) {
+            $nameserver = new Nameserver(...$nameserver);
+        }
+        Loop::run(function () use ($nameservers) {
+            $DohConfig = new DoH\DoHConfig($nameservers);
             Dns\resolver(new DoH\Rfc8484StubResolver($DohConfig));
 
             $records = yield Dns\resolve("google.com", Record::AAAA);
@@ -106,11 +114,13 @@ class IntegrationTest extends TestCase
      * @group internet
      * @dataProvider provideServers
      */
-    public function testPtrLookup($nameserver)
+    public function testPtrLookup($nameservers)
     {
-        $nameserver = new Nameserver(...$nameserver);
-        Loop::run(function () use ($nameserver) {
-            $DohConfig = new DoH\DoHConfig([$nameserver]);
+        foreach ($nameservers as &$nameserver) {
+            $nameserver = new Nameserver(...$nameserver);
+        }
+        Loop::run(function () use ($nameservers) {
+            $DohConfig = new DoH\DoHConfig($nameservers);
             Dns\resolver(new DoH\Rfc8484StubResolver($DohConfig));
 
             $result = yield Dns\query("8.8.4.4", Record::PTR);
@@ -171,12 +181,24 @@ class IntegrationTest extends TestCase
 
     public function provideServers()
     {
-        return [
-            [['https://mozilla.cloudflare-dns.com/dns-query']],
-            [['https://mozilla.cloudflare-dns.com/dns-query', Nameserver::RFC8484_POST]],
-            [['https://mozilla.cloudflare-dns.com/dns-query', Nameserver::RFC8484_GET]],
-            [['https://mozilla.cloudflare-dns.com/dns-query', Nameserver::GOOGLE_JSON]],
-            [['https://google.com/resolve', Nameserver::GOOGLE_JSON, ["Host" => "dns.google.com"]]],
+        $nameservers = [
+            ['https://mozilla.cloudflare-dns.com/dns-query'],
+            ['https://mozilla.cloudflare-dns.com/dns-query', Nameserver::RFC8484_POST],
+            ['https://mozilla.cloudflare-dns.com/dns-query', Nameserver::RFC8484_GET],
+            ['https://mozilla.cloudflare-dns.com/dns-query', Nameserver::GOOGLE_JSON],
+            ['https://google.com/resolve', Nameserver::GOOGLE_JSON, ["Host" => "dns.google.com"]],
         ];
+        $result = [];
+        for ($start = 0; $start < count($nameservers); $start++) {
+            $temp = [];
+            for ($i = 0; $i < count($nameservers); $i++) {
+                $i = ($start + $i) % count($nameservers);
+
+                $temp[] = $nameservers[$i];
+            }
+            $result[] = [$temp];
+        }
+
+        return $result;
     }
 }

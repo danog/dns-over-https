@@ -2,10 +2,9 @@
 
 namespace Amp\DoH\Internal;
 
-use Amp;
 use Amp\Artax\Client;
 use Amp\Artax\Request;
-use Amp\Dns\DnsException;
+use Amp\DoH\DoHException;
 use Amp\DoH\JsonDecoderFactory;
 use Amp\DoH\Nameserver;
 use Amp\DoH\QueryEncoderFactory;
@@ -84,7 +83,7 @@ final class HttpsSocket extends Socket
         return call(function () use ($response, $id) {
             $response = yield $response;
             if ($response->getStatus() !== 200) {
-                throw new DnsException("HTTP result !== 200: ".$response->getReason());
+                throw new DoHException("HTTP result !== 200: ".$response->getStatus()." ".$response->getReason(), $response->getStatus());
             }
             $response = yield $response->getBody();
 
