@@ -245,7 +245,7 @@ final class Rfc8484StubResolver implements Resolver
 
             /** @var Nameserver[] $nameservers */
             $nameservers = $this->dohConfig->getNameservers();
-            $attempts = $this->config->getAttempts();
+            $attempts = $this->config->getAttempts() * count($nameservers);
             $attempt = 0;
 
             /** @var Socket $socket */
