@@ -43,12 +43,12 @@ class IntegrationTest extends TestCase
      * @group internet
      * @dataProvider provideServers
      */
-    public function testWorksAfterConfigReload($hostname, $nameservers)
+    public function testWorksAfterConfigReload($nameservers)
     {
         foreach ($nameservers as &$nameserver) {
             $nameserver = new Nameserver(...$nameserver);
         }
-        Loop::run(function () use ($hostname, $nameservers) {
+        Loop::run(function () use ($nameservers) {
             $DohConfig = new DoH\DoHConfig($nameservers);
             Dns\resolver(new DoH\Rfc8484StubResolver($DohConfig));
 
