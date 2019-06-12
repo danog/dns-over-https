@@ -3,6 +3,7 @@
 namespace Amp\DoH;
 
 use Amp\Cache\Cache;
+use Amp\Dns\Config;
 use Amp\Dns\ConfigException;
 use Amp\Dns\DnsException;
 use Amp\Dns\NoRecordException;
@@ -70,7 +71,11 @@ final class Rfc8484StubResolver implements Resolver
 
         return call(function () use ($name, $typeRestriction) {
             if (!$this->config) {
-                yield $this->reloadConfig();
+                try {
+                    yield $this->reloadConfig();
+                } catch (ConfigException $e) {
+                    $this->config = new Config([], []);
+                }
             }
 
             switch ($typeRestriction) {
@@ -176,13 +181,12 @@ final class Rfc8484StubResolver implements Resolver
      */
     public function reloadConfig(): Promise
     {
-        $this->subResolver->reloadConfig();
-
         if ($this->pendingConfig) {
             return $this->pendingConfig;
         }
 
         $promise = call(function () {
+            yield $this->subResolver->reloadConfig();
             $this->config = yield $this->configLoader->loadConfig();
         });
 
@@ -225,7 +229,11 @@ final class Rfc8484StubResolver implements Resolver
 
         $promise = call(function () use ($name, $type) {
             if (!$this->config) {
-                yield $this->reloadConfig();
+                try {
+                    yield $this->reloadConfig();
+                } catch (ConfigException $e) {
+                    $this->config = new Config([], []);
+                }
             }
 
             $name = $this->normalizeName($name, $type);
