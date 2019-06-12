@@ -5,7 +5,7 @@
 ![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)
 
 `danog/dns-over-https` provides asynchronous and secure DNS-over-HTTPS name resolution for [Amp](https://github.com/amphp/amp).  
-Supports [RFC 8484](https://tools.ietf.org/html/rfc8484#section-10) POST and GET syntaxes as well as [Google's proprietary JSON DNS format](https://developers.google.com/speed/public-dns/docs/dns-over-https).  
+Supports [RFC 8484](https://tools.ietf.org/html/rfc8484) POST and GET syntaxes as well as [Google's proprietary JSON DNS format](https://developers.google.com/speed/public-dns/docs/dns-over-https).  
 Supports passing custom headers for [domain fronting](https://en.wikipedia.org/wiki/Domain_fronting) with google DNS.  
 
 ## Installation
