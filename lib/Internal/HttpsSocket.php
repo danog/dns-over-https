@@ -7,12 +7,12 @@ use Amp\Artax\Request;
 use Amp\DoH\DoHException;
 use Amp\DoH\Nameserver;
 use Amp\Promise;
+use danog\LibDNSJson\JsonDecoderFactory;
+use danog\LibDNSJson\QueryEncoderFactory;
 use LibDNS\Decoder\DecoderFactory;
 use LibDNS\Encoder\EncoderFactory;
 use LibDNS\Messages\Message;
 use function Amp\call;
-use danog\LibDNSJson\QueryEncoderFactory;
-use danog\LibDNSJson\JsonDecoderFactory;
 
 /** @internal */
 final class HttpsSocket extends Socket
