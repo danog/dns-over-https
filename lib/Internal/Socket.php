@@ -146,7 +146,7 @@ abstract class Socket
             $message = "Unexpected error during resolution: ".$exception->getMessage();
             $exception = new DnsException($message, 0, $exception);
         }
-        
+
         $pending = $this->pending;
         $this->pending = [];
 
