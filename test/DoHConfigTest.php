@@ -32,7 +32,7 @@ class DoHConfigTest extends TestCase
             [[new Nameserver('https://cloudflare-dns.com/dns-query', Nameserver::RFC8484_GET)]],
             [[new Nameserver('https://cloudflare-dns.com/dns-query', Nameserver::GOOGLE_JSON)]],
             [[new Nameserver('https://dns.google/resolve', Nameserver::GOOGLE_JSON)]],
-            [[new Nameserver('https://cloudflare-dns.com/dns-query', Nameserver::GOOGLE_JSON), new Nameserver('dns.google/resolve', Nameserver::GOOGLE_JSON)]],
+            [[new Nameserver('https://cloudflare-dns.com/dns-query', Nameserver::GOOGLE_JSON), new Nameserver('https://dns.google/resolve', Nameserver::GOOGLE_JSON)]],
         ];
     }
 
