@@ -133,7 +133,7 @@ class IntegrationTest extends TestCase
 
             /** @var Record $record */
             $record = $result[0];
-            $this->assertSame("google-public-dns-b.google.com", $record->getValue());
+            $this->assertSame("dns.google", $record->getValue());
             $this->assertNotNull($record->getTtl());
             $this->assertSame(Record::PTR, $record->getType());
         });
@@ -194,7 +194,7 @@ class IntegrationTest extends TestCase
             ['https://mozilla.cloudflare-dns.com/dns-query', Nameserver::RFC8484_POST],
             ['https://mozilla.cloudflare-dns.com/dns-query', Nameserver::RFC8484_GET],
             ['https://mozilla.cloudflare-dns.com/dns-query', Nameserver::GOOGLE_JSON],
-            ['https://google.com/resolve', Nameserver::GOOGLE_JSON, ["Host" => "dns.google.com"]],
+            ['https://dns.google/resolve', Nameserver::GOOGLE_JSON],
         ];
         $result = [];
         for ($start = 0; $start < \count($nameservers); $start++) {

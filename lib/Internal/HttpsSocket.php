@@ -2,10 +2,10 @@
 
 namespace Amp\DoH\Internal;
 
-use Amp\Artax\Client;
-use Amp\Artax\Request;
 use Amp\DoH\DoHException;
 use Amp\DoH\Nameserver;
+use Amp\Http\Client\DelegateHttpClient;
+use Amp\Http\Client\Request;
 use Amp\Promise;
 use danog\LibDNSJson\JsonDecoderFactory;
 use danog\LibDNSJson\QueryEncoderFactory;
@@ -17,7 +17,7 @@ use function Amp\call;
 /** @internal */
 final class HttpsSocket extends Socket
 {
-    /** @var \Amp\Artax\Client */
+    /** @var \Amp\Http\HttpClient */
     private $httpClient;
 
     /** @var \Amp\DoH\Nameserver */
@@ -32,14 +32,14 @@ final class HttpsSocket extends Socket
     /** @var \Amp\Deferred */
     private $responseDeferred;
 
-    public static function connect(Client $artax, Nameserver $nameserver): Socket
+    public static function connect(DelegateHttpClient $httpClient, Nameserver $nameserver): Socket
     {
-        return new self($artax, $nameserver);
+        return new self($httpClient, $nameserver);
     }
 
-    protected function __construct(Client $artax, Nameserver $nameserver)
+    protected function __construct(DelegateHttpClient $httpClient, Nameserver $nameserver)
     {
-        $this->httpClient = $artax;
+        $this->httpClient = $httpClient;
         $this->nameserver = $nameserver;
 
         if ($nameserver->getType() !== Nameserver::GOOGLE_JSON) {
@@ -60,23 +60,24 @@ final class HttpsSocket extends Socket
         switch ($this->nameserver->getType()) {
             case Nameserver::RFC8484_GET:
                 $data = $this->encoder->encode($message);
-                $request = (new Request($this->nameserver->getUri().'?'.\http_build_query(['dns' => \base64_encode($data), 'ct' => 'application/dns-message']), "GET"))
-                    ->withHeader('accept', 'application/dns-message')
-                    ->withHeaders($this->nameserver->getHeaders());
+                $request = new Request($this->nameserver->getUri().'?'.\http_build_query(['dns' => \base64_encode($data), 'ct' => 'application/dns-message']), "GET");
+                $request->setHeader('accept', 'application/dns-message');
+                $request->setHeaders($this->nameserver->getHeaders());
                 break;
             case Nameserver::RFC8484_POST:
                 $data = $this->encoder->encode($message);
-                $request = (new Request($this->nameserver->getUri(), "POST"))
-                    ->withBody($data)
-                    ->withHeader('content-type', 'application/dns-message')
-                    ->withHeader('accept', 'application/dns-message')
-                    ->withHeaders($this->nameserver->getHeaders());
+                $request = new Request($this->nameserver->getUri(), "POST");
+                $request->setBody($data);
+                $request->setHeader('content-type', 'application/dns-message');
+                $request->setHeader('accept', 'application/dns-message');
+                $request->setHeader('content-length', strlen($data));
+                $request->setHeaders($this->nameserver->getHeaders());
                 break;
             case Nameserver::GOOGLE_JSON:
                 $data = $this->encoder->encode($message);
-                $request = (new Request($this->nameserver->getUri().'?'.$data, "GET"))
-                    ->withHeader('accept', 'application/dns-json')
-                    ->withHeaders($this->nameserver->getHeaders());
+                $request = new Request($this->nameserver->getUri().'?'.$data, "GET");
+                $request->setHeader('accept', 'application/dns-json');
+                $request->setHeaders($this->nameserver->getHeaders());
                 break;
         }
         $response = $this->httpClient->request($request);
@@ -85,8 +86,7 @@ final class HttpsSocket extends Socket
             if ($response->getStatus() !== 200) {
                 throw new DoHException("HTTP result !== 200: ".$response->getStatus()." ".$response->getReason(), $response->getStatus());
             }
-            $response = yield $response->getBody();
-
+            $response = yield $response->getBody()->buffer();
 
             switch ($this->nameserver->getType()) {
                 case Nameserver::RFC8484_GET:

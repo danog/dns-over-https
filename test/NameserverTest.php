@@ -25,7 +25,7 @@ class NameserverTest extends TestCase
             ['https://mozilla.cloudflare-dns.com/dns-query', Nameserver::RFC8484_POST],
             ['https://mozilla.cloudflare-dns.com/dns-query', Nameserver::RFC8484_GET],
             ['https://mozilla.cloudflare-dns.com/dns-query', Nameserver::GOOGLE_JSON],
-            ['https://google.com/resolve', Nameserver::GOOGLE_JSON, ["Host" => "dns.google.com"]],
+            ['https://dns.google/resolve', Nameserver::GOOGLE_JSON],
         ];
     }
 
@@ -62,13 +62,13 @@ class NameserverTest extends TestCase
             ['http://mozilla.cloudflare-dns.com/dns-query', Nameserver::RFC8484_POST],
             ['http://mozilla.cloudflare-dns.com/dns-query', Nameserver::RFC8484_GET],
             ['http://mozilla.cloudflare-dns.com/dns-query', Nameserver::GOOGLE_JSON],
-            ['http://google.com/resolve', Nameserver::GOOGLE_JSON, ["Host" => "dns.google.com"]],
+            ['http://dns.google/resolve', Nameserver::GOOGLE_JSON],
 
             ['mozilla.cloudflare-dns.com/dns-query'],
             ['mozilla.cloudflare-dns.com/dns-query', Nameserver::RFC8484_POST],
             ['mozilla.cloudflare-dns.com/dns-query', Nameserver::RFC8484_GET],
             ['mozilla.cloudflare-dns.com/dns-query', Nameserver::GOOGLE_JSON],
-            ['google.com/resolve', Nameserver::GOOGLE_JSON, ["Host" => "dns.google.com"]],
+            ['dns.google/resolve', Nameserver::GOOGLE_JSON],
 
             ['https://mozilla.cloudflare-dns.com/dns-query', 100],
             ['https://mozilla.cloudflare-dns.com/dns-query', -1],

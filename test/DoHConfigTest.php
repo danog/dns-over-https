@@ -2,7 +2,6 @@
 
 namespace Amp\DoH\Test;
 
-use Amp\Artax\DefaultClient;
 use Amp\Cache\ArrayCache;
 use Amp\Dns\ConfigException;
 use Amp\Dns\Rfc1035StubResolver;
@@ -10,6 +9,7 @@ use Amp\Dns\UnixConfigLoader;
 use Amp\Dns\WindowsConfigLoader;
 use Amp\DoH\DoHConfig;
 use Amp\DoH\Nameserver;
+use Amp\Http\Client\HttpClientBuilder;
 use Amp\PHPUnit\TestCase;
 
 class DoHConfigTest extends TestCase
@@ -31,8 +31,8 @@ class DoHConfigTest extends TestCase
             [[new Nameserver('https://cloudflare-dns.com/dns-query', Nameserver::RFC8484_POST)]],
             [[new Nameserver('https://cloudflare-dns.com/dns-query', Nameserver::RFC8484_GET)]],
             [[new Nameserver('https://cloudflare-dns.com/dns-query', Nameserver::GOOGLE_JSON)]],
-            [[new Nameserver('https://google.com/resolve', Nameserver::GOOGLE_JSON, ["host" => "dns.google.com"])]],
-            [[new Nameserver('https://cloudflare-dns.com/dns-query', Nameserver::GOOGLE_JSON), new Nameserver('https://google.com/resolve', Nameserver::GOOGLE_JSON, ["host" => "dns.google.com"])]],
+            [[new Nameserver('https://dns.google/resolve', Nameserver::GOOGLE_JSON)]],
+            [[new Nameserver('https://cloudflare-dns.com/dns-query', Nameserver::GOOGLE_JSON), new Nameserver('dns.google/resolve', Nameserver::GOOGLE_JSON)]],
         ];
     }
 
@@ -74,19 +74,19 @@ class DoHConfigTest extends TestCase
     }
 
     /**
-     * @param \Amp\Artax\Client $client Valid artax instance
+     * @param \Amp\Http\Client\DelegateHttpClient $client Valid HttpClient instance
      *
-     * @dataProvider provideValidArtax
+     * @dataProvider provideValidHttpClient
      */
-    public function testAcceptsValidArtax($client)
+    public function testAcceptsValidHttpClient($client)
     {
         $this->assertInstanceOf(DoHConfig::class, new DoHConfig([new Nameserver('https://cloudflare-dns.com/dns-query')], $client));
     }
 
-    public function provideValidArtax()
+    public function provideValidHttpClient()
     {
         return [
-            [new DefaultClient()],
+            [HttpClientBuilder::buildDefault()],
         ];
     }
     /**

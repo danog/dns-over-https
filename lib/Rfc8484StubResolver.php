@@ -147,7 +147,15 @@ final class Rfc8484StubResolver implements Resolver
                                 if ($reason instanceof NoRecordException) {
                                     throw $reason;
                                 }
-                                $errors[] = $reason->getMessage();
+                                $error = $reason->getMessage();
+                                if ($reason instanceof MultiReasonException) {
+                                    $reasons = [];
+                                    foreach ($reason->getReasons() as $reason) {
+                                        $reasons []= $reason->getMessage();
+                                    }
+                                    $error .= " (".implode(", ", $reasons).")";
+                                }
+                                $errors[] = $error;
                             }
 
                             throw new DnsException("All query attempts failed for {$name}: ".\implode(", ", $errors), 0, $e);
@@ -254,6 +262,8 @@ final class Rfc8484StubResolver implements Resolver
 
             $attemptDescription = [];
 
+            $exceptions = [];
+            
             while ($attempt < $attempts) {
                 try {
                     $attemptDescription[] = $nameserver;
@@ -263,6 +273,7 @@ final class Rfc8484StubResolver implements Resolver
                         $response = yield $socket->ask($question, $this->config->getTimeout());
                     } catch (DoHException $e) {
                         // Defer call, because it might interfere with the unreference() call in Internal\Socket otherwise
+                        $exceptions []= $e;
 
                         $i = ++$attempt % \count($nameservers);
                         $nameserver = $nameservers[$i];
@@ -319,13 +330,17 @@ final class Rfc8484StubResolver implements Resolver
                 }
             }
 
-            throw new TimeoutException(\sprintf(
+            $timeout = new TimeoutException(\sprintf(
                 "No response for '%s' (%s) from any nameserver after %d attempts, tried %s",
                 $name,
                 Record::getName($type),
                 $attempts,
                 \implode(", ", $attemptDescription)
             ));
+            if (!$exceptions) {
+                throw $timeout;
+            }
+            throw new MultiReasonException($exceptions, $timeout->getMessage());
         });
 
         $this->pendingQueries[$type." ".$name] = $promise;
@@ -401,7 +416,7 @@ final class Rfc8484StubResolver implements Resolver
             return $this->sockets[$uri];
         }
 
-        $this->sockets[$uri] = HttpsSocket::connect($this->dohConfig->getArtax(), $nameserver);
+        $this->sockets[$uri] = HttpsSocket::connect($this->dohConfig->getHttpClient(), $nameserver);
 
         return $this->sockets[$uri];
     }

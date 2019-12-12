@@ -3,14 +3,13 @@
 namespace Amp\DoH\Internal;
 
 use Amp;
-use Amp\Artax\Client;
-use Amp\Artax\Response;
 use Amp\ByteStream\StreamException;
 use Amp\Deferred;
 use Amp\Dns\DnsException;
 use Amp\Dns\TimeoutException;
 use Amp\DoH\DoHException;
 use Amp\DoH\Nameserver;
+use Amp\Http\Client\DelegateHttpClient;
 use Amp\Promise;
 use LibDNS\Messages\Message;
 use LibDNS\Messages\MessageFactory;
@@ -41,7 +40,7 @@ abstract class Socket
      * @return Promise<self>
      */
 
-    abstract public static function connect(Client $artax, Nameserver $nameserver): self;
+    abstract public static function connect(DelegateHttpClient $httpClient, Nameserver $nameserver): self;
 
     /**
      * @param Message $message
@@ -147,7 +146,7 @@ abstract class Socket
             $message = "Unexpected error during resolution: ".$exception->getMessage();
             $exception = new DnsException($message, 0, $exception);
         }
-
+        
         $pending = $this->pending;
         $this->pending = [];
 

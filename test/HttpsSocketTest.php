@@ -2,11 +2,11 @@
 
 namespace Amp\DoH\Test;
 
-use Amp\Artax\DefaultClient;
 use Amp\Dns;
 use Amp\DoH;
 use Amp\DoH\Internal\Socket;
 use Amp\DoH\Nameserver;
+use Amp\Http\Client\HttpClientBuilder;
 use LibDNS\Records\QuestionFactory;
 use function Amp\Promise\wait;
 
@@ -14,7 +14,7 @@ class HttpsSocketTest extends SocketTest
 {
     protected function connect(Nameserver $nameserver): Socket
     {
-        return DoH\Internal\HttpsSocket::connect(new DefaultClient(), $nameserver);
+        return DoH\Internal\HttpsSocket::connect(HttpClientBuilder::buildDefault(), $nameserver);
     }
 
     public function testTimeout()
