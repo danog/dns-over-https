@@ -47,7 +47,7 @@
         "danog/libdns-json": "^0.1",
         "daverandom/libdns": "^2.0.1",
         "amphp/amp": "^2",
-        "amphp/http-client": "4.0-rc11",
+        "amphp/http-client": "dev-master as 4.0-rc11",
         "amphp/dns": "dev-master as v0.9.x-dev",
         "ext-filter": "*",
         "ext-json": "*"
