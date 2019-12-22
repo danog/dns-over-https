@@ -42,12 +42,12 @@
     ],
     "require": {
         "php": ">=7.0",
-        "amphp/cache": "^1.2",
+        "amphp/cache": "^1",
         "amphp/parser": "^1",
         "danog/libdns-json": "^0.1",
         "daverandom/libdns": "^2.0.1",
         "amphp/amp": "^2",
-        "amphp/http-client": "4.0-rc10",
+        "amphp/http-client": "^4",
         "amphp/dns": "dev-master as v0.9.x-dev",
         "ext-filter": "*",
         "ext-json": "*"
