@@ -70,7 +70,7 @@ final class HttpsSocket extends Socket
                 $request->setBody($data);
                 $request->setHeader('content-type', 'application/dns-message');
                 $request->setHeader('accept', 'application/dns-message');
-                $request->setHeader('content-length', strlen($data));
+                $request->setHeader('content-length', \strlen($data));
                 $request->setHeaders($this->nameserver->getHeaders());
                 break;
             case Nameserver::GOOGLE_JSON:

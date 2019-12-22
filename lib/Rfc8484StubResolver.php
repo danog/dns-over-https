@@ -153,7 +153,7 @@ final class Rfc8484StubResolver implements Resolver
                                     foreach ($reason->getReasons() as $reason) {
                                         $reasons []= $reason->getMessage();
                                     }
-                                    $error .= " (".implode(", ", $reasons).")";
+                                    $error .= " (".\implode(", ", $reasons).")";
                                 }
                                 $errors[] = $error;
                             }
@@ -263,7 +263,7 @@ final class Rfc8484StubResolver implements Resolver
             $attemptDescription = [];
 
             $exceptions = [];
-            
+
             while ($attempt < $attempts) {
                 try {
                     $attemptDescription[] = $nameserver;
