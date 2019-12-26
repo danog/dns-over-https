@@ -147,11 +147,11 @@ final class Rfc8484StubResolver implements Resolver
                                 if ($reason instanceof NoRecordException) {
                                     throw $reason;
                                 }
-                                $error = $reason->getMessage();
+                                $error = (string) $reason;//->getMessage();
                                 if ($reason instanceof MultiReasonException) {
                                     $reasons = [];
                                     foreach ($reason->getReasons() as $reason) {
-                                        $reasons []= $reason->getMessage();
+                                        $reasons []= (string) $reason;//->getMessage();
                                     }
                                     $error .= " (".\implode(", ", $reasons).")";
                                 }
