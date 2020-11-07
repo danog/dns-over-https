@@ -42,19 +42,21 @@
     ],
     "require": {
         "php": ">=7.0",
-        "amphp/cache": "^1",
+        "amphp/cache": "^v2-dev",
         "amphp/parser": "^1",
         "danog/libdns-json": "^0.1",
         "daverandom/libdns": "^2.0.1",
-        "amphp/amp": "^2",
-        "amphp/http-client": "^4",
-        "amphp/dns": "^1",
+        "amphp/amp": "^v3-dev",
+        "amphp/http-client": "^v5-dev",
+        "amphp/dns": "^v2-dev",
         "ext-filter": "*",
         "ext-json": "*"
     },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
     "require-dev": {
-        "amphp/phpunit-util": "^1",
-        "phpunit/phpunit": "^6",
+        "amphp/phpunit-util": "^v2-dev",
+        "phpunit/phpunit": "^9",
         "amphp/php-cs-fixer-config": "dev-master"
     },
     "autoload": {
