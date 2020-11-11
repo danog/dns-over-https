@@ -17,6 +17,8 @@ use Amp\Promise;
 use LibDNS\Messages\Message;
 use LibDNS\Records\Question;
 use LibDNS\Records\QuestionFactory;
+
+use function Amp\await;
 use function Amp\call;
 use function Amp\Dns\normalizeName;
 
@@ -63,13 +65,13 @@ final class Rfc8484StubResolver implements Resolver
     }
 
     /** @inheritdoc */
-    public function resolve(string $name, int $typeRestriction = null): Promise
+    public function resolve(string $name, int $typeRestriction = null): array
     {
         if ($typeRestriction !== null && $typeRestriction !== Record::A && $typeRestriction !== Record::AAAA) {
             throw new \Error("Invalid value for parameter 2: null|Record::A|Record::AAAA expected");
         }
 
-        return call(function () use ($name, $typeRestriction) {
+        return await(call(function () use ($name, $typeRestriction) {
             if (!$this->config) {
                 try {
                     yield $this->reloadConfig();
@@ -177,7 +179,7 @@ final class Rfc8484StubResolver implements Resolver
             }
 
             return $records;
-        });
+        }));
     }
 
     /**
@@ -187,7 +189,7 @@ final class Rfc8484StubResolver implements Resolver
      *
      * @return Promise
      */
-    public function reloadConfig(): Promise
+    public function reloadConfig()
     {
         if ($this->pendingConfig) {
             return $this->pendingConfig;
@@ -204,7 +206,7 @@ final class Rfc8484StubResolver implements Resolver
             $this->pendingConfig = null;
         });
 
-        return $promise;
+        return await($promise);
     }
 
     private function queryHosts(string $name, int $typeRestriction = null): array
@@ -227,7 +229,7 @@ final class Rfc8484StubResolver implements Resolver
     }
 
     /** @inheritdoc */
-    public function query(string $name, int $type): Promise
+    public function query(string $name, int $type): array
     {
         $pendingQueryKey = $type." ".$name;
 
@@ -348,7 +350,7 @@ final class Rfc8484StubResolver implements Resolver
             unset($this->pendingQueries[$type." ".$name]);
         });
 
-        return $promise;
+        return await($promise);
     }
 
     private function normalizeName(string $name, int $type)
