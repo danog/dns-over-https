@@ -52,7 +52,7 @@ class IntegrationTest extends AsyncTestCase
         Dns\resolve('google.com');
         $this->assertNull(Dns\resolver()->reloadConfig());
         delay(0.5);
-        $result = is_array(Dns\resolve('google.com'));
+        $result = \is_array(Dns\resolve('google.com'));
         $this->assertTrue($result);
         //\usleep(500*1000);
     }
