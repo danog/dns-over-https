@@ -1,26 +1,22 @@
 <?php
 
-require __DIR__."/_bootstrap.php";
+require __DIR__ . "/_bootstrap.php";
 
 use Amp\Dns;
 use Amp\DoH;
-use Amp\Loop;
-use Amp\Promise;
 
-// Used only by the subresolver for resolving the DoH nameserver URL
-$customConfigLoader = new class implements Dns\ConfigLoader {
-    public function loadConfig(): Promise
+$customConfigLoader = new class implements Dns\DnsConfigLoader {
+    public function loadConfig(): Dns\DnsConfig
     {
-        return Amp\call(function () {
-            $hosts = yield (new Dns\HostLoader)->loadHosts();
+        $hosts = (new Dns\HostLoader)->loadHosts();
 
-            return new Dns\Config([
-                "8.8.8.8:53",
-                "[2001:4860:4860::8888]:53",
-            ], $hosts, $timeout = 5000, $attempts = 3);
-        });
+        return new Dns\DnsConfig([
+            "8.8.8.8:53",
+            "[2001:4860:4860::8888]:53",
+        ], $hosts, 5, 3);
     }
 };
+
 
 // Set default resolver to DNS-over-https resolver
 $DohConfig = new DoH\DoHConfig(
@@ -35,12 +31,10 @@ $DohConfig = new DoH\DoHConfig(
 );
 Dns\resolver(new DoH\Rfc8484StubResolver($DohConfig));
 
-Loop::run(function () {
-    $hostname = "amphp.org";
+$hostname = $argv[1] ?? "amphp.org";
 
-    try {
-        pretty_print_records($hostname, yield Dns\resolve($hostname));
-    } catch (Dns\DnsException $e) {
-        pretty_print_error($hostname, $e);
-    }
-});
+try {
+    pretty_print_records($hostname, Dns\resolve($hostname));
+} catch (Dns\DnsException $e) {
+    pretty_print_error($hostname, $e);
+}

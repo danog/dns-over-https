@@ -3,8 +3,8 @@
 namespace Amp\DoH;
 
 /**
- * Throw when DoH resolution fails.
+ * Thrown when DoH resolution fails.
  */
-class DoHException extends \Exception
+final class DoHException extends \Exception
 {
 }

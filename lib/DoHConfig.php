@@ -4,6 +4,7 @@ namespace Amp\DoH;
 
 use Amp\Cache\ArrayCache;
 use Amp\Cache\Cache;
+use Amp\Cache\LocalCache;
 use Amp\Dns\ConfigException;
 use Amp\Dns\ConfigLoader;
 use Amp\Dns\Resolver;
@@ -15,43 +16,48 @@ use Amp\Http\Client\HttpClientBuilder;
 
 final class DoHConfig
 {
-    private $nameservers;
-    private $httpClient;
-    private $subResolver;
-    private $configLoader;
-    private $cache;
+    /**
+     * @var non-empty-array<NameServer> $nameservers
+     */
+    private readonly array $nameservers;
+    private readonly DelegateHttpClient $httpClient;
+    private readonly Rfc1035StubResolver $subResolver;
+    private readonly ConfigLoader $configLoader;
+    private readonly Cache $cache;
 
-    public function __construct(array $nameservers, DelegateHttpClient $httpClient = null, Resolver $resolver = null, ConfigLoader $configLoader = null, Cache $cache = null)
+    /**
+     * @param non-empty-array<NameServer> $nameservers
+     */
+    public function __construct(array $nameservers, ?DelegateHttpClient $httpClient = null, ?Rfc1035StubResolver $resolver = null, ?ConfigLoader $configLoader = null, ?Cache $cache = null)
     {
         if (\count($nameservers) < 1) {
             throw new ConfigException("At least one nameserver is required for a valid config");
         }
 
         foreach ($nameservers as $nameserver) {
-            $this->validateNameserver($nameserver);
+            if (!($nameserver instanceof Nameserver)) {
+                throw new ConfigException("Invalid nameserver: {$nameserver}");
+            }
         }
 
         $this->nameservers = $nameservers;
         $this->httpClient = $httpClient ?? HttpClientBuilder::buildDefault();
-        $this->cache = $cache ?? new ArrayCache(5000/* default gc interval */, 256/* size */);
+        $this->cache = $cache ?? new LocalCache(256, 5.0);
         $this->configLoader = $configLoader ?? (\stripos(PHP_OS, "win") === 0
             ? new WindowsConfigLoader
             : new UnixConfigLoader);
         $this->subResolver = $resolver ?? new Rfc1035StubResolver(null, $this->configLoader);
     }
 
-    private function validateNameserver($nameserver)
-    {
-        if (!($nameserver instanceof Nameserver)) {
-            throw new ConfigException("Invalid nameserver: {$nameserver}");
-        }
-    }
-
+    /**
+     * @return non-empty-array<Nameserver>
+     */
     public function getNameservers(): array
     {
         return $this->nameservers;
     }
-    public function isNameserver($string): bool
+
+    public function isNameserver(string $string): bool
     {
         foreach ($this->nameservers as $nameserver) {
             if ($nameserver->getHost() === $string) {
@@ -74,7 +80,7 @@ final class DoHConfig
     {
         return $this->configLoader;
     }
-    public function getSubResolver(): Resolver
+    public function getSubResolver(): Rfc1035StubResolver
     {
         return $this->subResolver;
     }
