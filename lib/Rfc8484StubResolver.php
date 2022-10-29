@@ -95,26 +95,34 @@ final class Rfc8484StubResolver implements Resolver
             case Record::A:
                 if (\filter_var($name, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
                     return [new Record($name, Record::A, null)];
-                } elseif (\filter_var($name, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+                }
+
+                if (\filter_var($name, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
                     throw new DnsException("Got an IPv6 address, but type is restricted to IPv4");
                 }
                 break;
             case Record::AAAA:
                 if (\filter_var($name, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
                     return [new Record($name, Record::AAAA, null)];
-                } elseif (\filter_var($name, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+                }
+
+                if (\filter_var($name, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
                     throw new DnsException("Got an IPv4 address, but type is restricted to IPv6");
                 }
                 break;
             default:
                 if (\filter_var($name, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
                     return [new Record($name, Record::A, null)];
-                } elseif (\filter_var($name, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+                }
+
+                if (\filter_var($name, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
                     return [new Record($name, Record::AAAA, null)];
                 }
                 break;
         }
 
+        $dots = \substr_count($name, ".");
+        $trailingDot = $name[-1] === ".";
         $name = normalizeName($name);
 
         if ($records = $this->queryHosts($name, $typeRestriction)) {
@@ -132,53 +140,77 @@ final class Rfc8484StubResolver implements Resolver
         if ($this->dohConfig->isNameserver($name)) {
             return $this->subResolver->resolve($name, $typeRestriction, $cancellation);
         }
+        \assert($this->config !== null);
 
-        for ($redirects = 0; $redirects < 5; $redirects++) {
-            try {
-                if ($typeRestriction) {
-                    return $this->query($name, $typeRestriction, $cancellation);
+        $searchList = [null];
+        if (!$trailingDot && $dots < $this->config->getNdots()) {
+            $searchList = \array_merge($this->config->getSearchList(), $searchList);
+        }
+
+        foreach ($searchList as $searchIndex => $search) {
+            for ($redirects = 0; $redirects < 5; $redirects++) {
+                $searchName = $name;
+
+                if ($search !== null) {
+                    $searchName = $name . "." . $search;
                 }
-                list($exceptions, $records) = awaitAll([
-                    async(fn () => $this->query($name, Record::A, $cancellation)),
-                    async(fn () => $this->query($name, Record::AAAA, $cancellation)),
-                ]);
 
-                if (\count($exceptions) === 2) {
-                    $errors = [];
-
-                    foreach ($exceptions as $reason) {
-                        if ($reason instanceof NoRecordException) {
-                            throw $reason;
-                        }
-
-                        if ($searchIndex < \count($searchList) - 1 && \in_array($reason->getCode(), [2, 3], true)) {
-                            continue 2;
-                        }
-
-                        $errors[] = $reason->getMessage();
+                try {
+                    if ($typeRestriction) {
+                        return $this->query($searchName, $typeRestriction, $cancellation);
                     }
 
-                    throw new DnsException(
-                        "All query attempts failed for {$name}: " . \implode(", ", $errors),
-                        0,
-                        new CompositeException($exceptions)
-                    );
-                }
-                return \array_merge(...$records);
-            } catch (NoRecordException $e) {
-                try {
-                    $cnameRecords = $this->query($name, Record::CNAME, $cancellation);
-                    $name = $cnameRecords[0]->getValue();
-                    continue;
+                    [$exceptions, $records] = Future\awaitAll([
+                        async(fn () => $this->query($searchName, Record::A, $cancellation)),
+                        async(fn () => $this->query($searchName, Record::AAAA, $cancellation)),
+                    ]);
+
+                    if (\count($exceptions) === 2) {
+                        $errors = [];
+
+                        foreach ($exceptions as $reason) {
+                            if ($reason instanceof NoRecordException) {
+                                throw $reason;
+                            }
+
+                            if ($searchIndex < \count($searchList) - 1 && \in_array($reason->getCode(), [2, 3], true)) {
+                                continue 2;
+                            }
+
+                            $errors[] = $reason->getMessage();
+                        }
+
+                        throw new DnsException(
+                            "All query attempts failed for {$searchName}: " . \implode(", ", $errors),
+                            0,
+                            new CompositeException($exceptions)
+                        );
+                    }
+
+                    return \array_merge(...$records);
                 } catch (NoRecordException) {
-                    $dnameRecords = $this->query($name, Record::DNAME, $cancellation);
-                    $name = $dnameRecords[0]->getValue();
-                    continue;
+                    try {
+                        $cnameRecords = $this->query($searchName, Record::CNAME, $cancellation);
+                        $name = $cnameRecords[0]->getValue();
+                        continue;
+                    } catch (NoRecordException) {
+                        $dnameRecords = $this->query($searchName, Record::DNAME, $cancellation);
+                        $name = $dnameRecords[0]->getValue();
+                        continue;
+                    }
+                } catch (DnsException $e) {
+                    if ($searchIndex < \count($searchList) - 1 && \in_array($e->getCode(), [2, 3], true)) {
+                        continue 2;
+                    }
+
+                    throw $e;
                 }
             }
         }
 
-        return $records;
+        \assert(isset($searchName));
+
+        throw new DnsException("Giving up resolution of '{$searchName}', too many redirects");
     }
 
     /**
