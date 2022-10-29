@@ -34,7 +34,7 @@ class IntegrationTest extends AsyncTestCase
             $inAddr,
             "Server name $hostname did not resolve to a valid IP address"
         );
-        //\usleep(500*1000);
+        \usleep(500*1000);
     }
 
     /**
@@ -54,7 +54,7 @@ class IntegrationTest extends AsyncTestCase
         delay(0.5);
         $result = \is_array(Dns\resolve('google.com'));
         $this->assertTrue($result);
-        //\usleep(500*1000);
+        \usleep(500*1000);
     }
 
     /**
@@ -80,7 +80,7 @@ class IntegrationTest extends AsyncTestCase
                 "Server name google.com did not resolve to a valid IP address"
             );
         }
-        //\usleep(500*1000);
+        \usleep(500*1000);
     }
 
     /**
@@ -106,7 +106,7 @@ class IntegrationTest extends AsyncTestCase
                 "Server name google.com did not resolve to a valid IP address"
             );
         }
-        //\usleep(500*1000);
+        \usleep(500*1000);
     }
 
     /**
@@ -128,7 +128,7 @@ class IntegrationTest extends AsyncTestCase
         $this->assertSame("dns.google", $record->getValue());
         $this->assertNotNull($record->getTtl());
         $this->assertSame(Record::PTR, $record->getType());
-        //\usleep(500*1000);
+        \usleep(500*1000);
     }
 
     public function provideServersAndHostnames()
