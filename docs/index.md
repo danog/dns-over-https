@@ -27,14 +27,14 @@ use Amp\Dns;
 
 $nameservers = [];
 
-// Defaults to DoH\Nameserver::RFC8484_POST
+// Defaults to DoH\NameserverType::RFC8484_POST
 $nameservers []= new DoH\Nameserver('https://mozilla.cloudflare-dns.com/dns-query'); 
 
-$nameservers []= new DoH\Nameserver('https://mozilla.cloudflare-dns.com/dns-query', DoH\Nameserver::RFC8484_POST);
-$nameservers []= new DoH\Nameserver('https://mozilla.cloudflare-dns.com/dns-query', DoH\Nameserver::RFC8484_GET);
-$nameservers []= new DoH\Nameserver('https://mozilla.cloudflare-dns.com/dns-query', DoH\Nameserver::GOOGLE_JSON);
-$nameservers []= new DoH\Nameserver('https://dns.google.com/resolve', DoH\Nameserver::GOOGLE_JSON);
-$nameservers []= new DoH\Nameserver('https://google.com/resolve', DoH\Nameserver::GOOGLE_JSON, ['Host' => 'https://dns.google.com']);
+$nameservers []= new DoH\Nameserver('https://mozilla.cloudflare-dns.com/dns-query', DoH\NameserverType::RFC8484_POST);
+$nameservers []= new DoH\Nameserver('https://mozilla.cloudflare-dns.com/dns-query', DoH\NameserverType::RFC8484_GET);
+$nameservers []= new DoH\Nameserver('https://mozilla.cloudflare-dns.com/dns-query', DoH\NameserverType::GOOGLE_JSON);
+$nameservers []= new DoH\Nameserver('https://dns.google.com/resolve', DoH\NameserverType::GOOGLE_JSON);
+$nameservers []= new DoH\Nameserver('https://google.com/resolve', DoH\NameserverType::GOOGLE_JSON, ['Host' => 'https://dns.google.com']);
 
 $DohConfig = new DoH\DoHConfig($nameservers);
 
@@ -64,14 +64,14 @@ To resolve addresses using `dns-over-https` first set the global DNS resolver as
 // What's returned depends on what's available for the given hostname.
 
 /** @var Amp\Dns\Record[] $records */
-$records = yield Amp\Dns\resolve("github.com");
+$records = Amp\Dns\resolve("github.com");
 ```
 
 ```php
 // Example with type restriction. Will throw an exception if there are no A records.
 
 /** @var Amp\Dns\Record[] $records */
-$records = yield Amp\Dns\resolve("github.com", Amp\Dns\Record::A);
+$records = Amp\Dns\resolve("github.com", Amp\Dns\Record::A);
 ```
 
 ### Custom Queries
@@ -92,7 +92,7 @@ $records = Amp\Dns\query("8.8.8.8", Amp\Dns\Record::PTR);
 
 ### Caching
 
-The `Rfc8484StubResolver` caches responses by default in an `Amp\Cache\ArrayCache`. You can set any other `Amp\Cache\Cache` implementation by creating a custom instance of `Rfc8484StubResolver` and setting that via `Amp\Dns\resolver()`, but it's usually unnecessary. If you have a lot of very short running scripts, you might want to consider using a local DNS resolver with a cache instead of setting a custom cache implementation, such as `dnsmasq`. 
+The `Rfc8484StubResolver` caches responses by default in an `Amp\Cache\LocalCache`. You can set any other `Amp\Cache\Cache` implementation by creating a custom instance of `Rfc8484StubResolver` and setting that via `Amp\Dns\resolver()`, but it's usually unnecessary. If you have a lot of very short running scripts, you might want to consider using a local DNS resolver with a cache instead of setting a custom cache implementation, such as `dnsmasq`. 
 
 ### Reloading Configuration
 
@@ -100,7 +100,7 @@ The subresolver (which is the resolver set in the `DoHConfig`, `Rfc1035StubResol
 
 ```php
 Loop::repeat(60000, function () use ($resolver) {
-    yield Amp\Dns\resolver()->reloadConfig();
+    Amp\Dns\resolver()->reloadConfig();
 });
 ```
 

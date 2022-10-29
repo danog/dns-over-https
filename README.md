@@ -23,24 +23,22 @@ use Amp\DoH;
 use Amp\Dns;
 use Amp\Loop;
 
-Loop::run(function () {
-    // Set default resolver to DNS-over-HTTPS resolver
-    $DohConfig = new DoH\DoHConfig([new DoH\Nameserver('https://mozilla.cloudflare-dns.com/dns-query')]); // Defaults to DoH\Nameserver::RFC8484_POST
-    Dns\resolver(new DoH\Rfc8484StubResolver($DohConfig));
+// Set default resolver to DNS-over-HTTPS resolver
+$DohConfig = new DoH\DoHConfig([new DoH\Nameserver('https://mozilla.cloudflare-dns.com/dns-query')]); // Defaults to DoH\NameserverType::RFC8484_POST
+Dns\resolver(new DoH\Rfc8484StubResolver($DohConfig));
 
-    $githubIpv4 = yield Dns\resolve("github.com", Dns\Record::A);
-    pretty_print_records("github.com", $githubIpv4);
+$githubIpv4 = Dns\resolve("github.com", Dns\Record::A);
+pretty_print_records("github.com", $githubIpv4);
 
-    $googleIpv4 = Amp\Dns\resolve("google.com", Dns\Record::A);
-    $googleIpv6 = Amp\Dns\resolve("google.com", Dns\Record::AAAA);
+$googleIpv4 = \Amp\async(fn () => Amp\Dns\resolve("google.com", Dns\Record::A));
+$googleIpv6 = \Amp\async(fn () => Amp\Dns\resolve("google.com", Dns\Record::AAAA));
 
-    $firstGoogleResult = yield Amp\Promise\first([$googleIpv4, $googleIpv6]);
-    pretty_print_records("google.com", $firstGoogleResult);
+$firstGoogleResult = Amp\awaitAll([$googleIpv4, $googleIpv6]);
+pretty_print_records("google.com", $firstGoogleResult);
 
-    $combinedGoogleResult = yield Amp\Dns\resolve("google.com");
-    pretty_print_records("google.com", $combinedGoogleResult);
+$combinedGoogleResult = Amp\Dns\resolve("google.com");
+pretty_print_records("google.com", $combinedGoogleResult);
 
-    $googleMx = yield Amp\Dns\query("google.com", Amp\Dns\Record::MX);
-    pretty_print_records("google.com", $googleMx);
-});
+$googleMx = Amp\Dns\query("google.com", Amp\Dns\Record::MX);
+pretty_print_records("google.com", $googleMx);
 ```

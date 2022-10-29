@@ -2,17 +2,18 @@
 
 namespace Amp\DoH\Test;
 
-use Amp\Cache\ArrayCache;
+use Amp\Cache\LocalCache;
 use Amp\Dns\ConfigException;
 use Amp\Dns\Rfc1035StubResolver;
 use Amp\Dns\UnixConfigLoader;
 use Amp\Dns\WindowsConfigLoader;
 use Amp\DoH\DoHConfig;
 use Amp\DoH\Nameserver;
+use Amp\DoH\NameserverType;
 use Amp\Http\Client\HttpClientBuilder;
-use Amp\PHPUnit\TestCase;
+use Amp\PHPUnit\AsyncTestCase;
 
-class DoHConfigTest extends TestCase
+class DoHConfigTest extends AsyncTestCase
 {
     /**
      * @param string[] $nameservers Valid server array.
@@ -28,11 +29,11 @@ class DoHConfigTest extends TestCase
     {
         return [
             [[new Nameserver('https://cloudflare-dns.com/dns-query')]],
-            [[new Nameserver('https://cloudflare-dns.com/dns-query', Nameserver::RFC8484_POST)]],
-            [[new Nameserver('https://cloudflare-dns.com/dns-query', Nameserver::RFC8484_GET)]],
-            [[new Nameserver('https://cloudflare-dns.com/dns-query', Nameserver::GOOGLE_JSON)]],
-            [[new Nameserver('https://dns.google/resolve', Nameserver::GOOGLE_JSON)]],
-            [[new Nameserver('https://cloudflare-dns.com/dns-query', Nameserver::GOOGLE_JSON), new Nameserver('https://dns.google/resolve', Nameserver::GOOGLE_JSON)]],
+            [[new Nameserver('https://cloudflare-dns.com/dns-query', NameserverType::RFC8484_POST)]],
+            [[new Nameserver('https://cloudflare-dns.com/dns-query', NameserverType::RFC8484_GET)]],
+            [[new Nameserver('https://cloudflare-dns.com/dns-query', NameserverType::GOOGLE_JSON)]],
+            [[new Nameserver('https://dns.google/resolve', NameserverType::GOOGLE_JSON)]],
+            [[new Nameserver('https://cloudflare-dns.com/dns-query', NameserverType::GOOGLE_JSON), new Nameserver('https://dns.google/resolve', NameserverType::GOOGLE_JSON)]],
         ];
     }
 
@@ -136,7 +137,7 @@ class DoHConfigTest extends TestCase
     public function provideValidCache()
     {
         return [
-            [new ArrayCache(5000/* default gc interval */, 256/* size */)],
+            [new LocalCache()],
         ];
     }
 }

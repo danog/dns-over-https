@@ -17,7 +17,6 @@ use Amp\Dns\TimeoutException;
 use Amp\Future;
 use Amp\Http\Client\DelegateHttpClient;
 use Amp\Http\Client\Request;
-use Amp\MultiReasonException;
 use Amp\NullCancellation;
 use Amp\Promise;
 use danog\LibDNSJson\JsonDecoder;
@@ -35,9 +34,7 @@ use LibDNS\Records\Question;
 use LibDNS\Records\QuestionFactory;
 
 use function Amp\async;
-use function Amp\call;
 use function Amp\Dns\normalizeName;
-use function Amp\Future\awaitAll;
 
 final class Rfc8484StubResolver implements Resolver
 {
@@ -221,7 +218,7 @@ final class Rfc8484StubResolver implements Resolver
     public function reloadConfig(): void
     {
         if (!$this->pendingConfig) {
-            $this->pendingConfig = async(function () {
+            $promise = async(function () {
                 try {
                     $this->subResolver->reloadConfig();
                     $this->config = $this->configLoader->loadConfig();
@@ -229,6 +226,7 @@ final class Rfc8484StubResolver implements Resolver
                     $this->pendingConfig = null;
                 }
             });
+            $this->pendingConfig = $promise;
         }
 
         $this->pendingConfig->await();
@@ -260,7 +258,7 @@ final class Rfc8484StubResolver implements Resolver
         $pendingQueryKey = $type." ".$name;
 
         if (isset($this->pendingQueries[$pendingQueryKey])) {
-            return $this->pendingQueries[$pendingQueryKey];
+            return $this->pendingQueries[$pendingQueryKey]->await($cancellation);
         }
 
         $promise = async(function () use ($name, $type, $cancellation, $pendingQueryKey) {

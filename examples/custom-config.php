@@ -17,7 +17,6 @@ $customConfigLoader = new class implements Dns\DnsConfigLoader {
     }
 };
 
-
 // Set default resolver to DNS-over-https resolver
 $DohConfig = new DoH\DoHConfig(
     [

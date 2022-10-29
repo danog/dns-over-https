@@ -2,12 +2,10 @@
 
 namespace Amp\DoH;
 
-use Amp\Cache\ArrayCache;
 use Amp\Cache\Cache;
 use Amp\Cache\LocalCache;
 use Amp\Dns\ConfigException;
 use Amp\Dns\ConfigLoader;
-use Amp\Dns\Resolver;
 use Amp\Dns\Rfc1035StubResolver;
 use Amp\Dns\UnixConfigLoader;
 use Amp\Dns\WindowsConfigLoader;
