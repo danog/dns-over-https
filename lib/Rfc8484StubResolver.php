@@ -18,10 +18,8 @@ use Amp\Future;
 use Amp\Http\Client\DelegateHttpClient;
 use Amp\Http\Client\Request;
 use Amp\NullCancellation;
-use Amp\Promise;
 use danog\LibDNSJson\JsonDecoder;
 use danog\LibDNSJson\JsonDecoderFactory;
-use danog\LibDNSJson\QueryEncoder;
 use danog\LibDNSJson\QueryEncoderFactory;
 use LibDNS\Decoder\Decoder;
 use LibDNS\Decoder\DecoderFactory;
@@ -48,13 +46,13 @@ final class Rfc8484StubResolver implements Resolver
 
     private Cache $cache;
 
-    /** @var Promise[] */
+    /** @var Future[] */
     private array $pendingQueries = [];
 
     private Rfc1035StubResolver $subResolver;
     private Encoder $encoder;
     private Decoder $decoder;
-    private QueryEncoder $encoderJson;
+    private Encoder $encoderJson;
     private JsonDecoder $decoderJson;
     private MessageFactory $messageFactory;
     private DelegateHttpClient $httpClient;
@@ -234,6 +232,7 @@ final class Rfc8484StubResolver implements Resolver
 
     private function queryHosts(string $name, int $typeRestriction = null): array
     {
+        \assert($this->config !== null);
         $hosts = $this->config->getKnownHosts();
         $records = [];
 
@@ -271,6 +270,8 @@ final class Rfc8484StubResolver implements Resolver
                     }
                 }
 
+                \assert($this->config !== null);
+
                 $name = $this->normalizeName($name, $type);
                 $question = $this->createQuestion($name, $type);
 
@@ -301,7 +302,6 @@ final class Rfc8484StubResolver implements Resolver
                         $result = [];
                         $ttls = [];
 
-                        /** @var \LibDNS\Records\Resource $record */
                         foreach ($answers as $record) {
                             $recordType = $record->getType();
                             $result[$recordType][] = (string) $record->getData();
@@ -351,6 +351,7 @@ final class Rfc8484StubResolver implements Resolver
     private function ask(Nameserver $nameserver, Question $question, Cancellation $cancellation): Message
     {
         $message = $this->createMessage($question, \random_int(0, 0xffff));
+        $request = null;
         switch ($nameserver->getType()) {
             case NameserverType::RFC8484_GET:
                 $data = $this->encoder->encode($message);
@@ -364,7 +365,7 @@ final class Rfc8484StubResolver implements Resolver
                 $request->setBody($data);
                 $request->setHeader('content-type', 'application/dns-message');
                 $request->setHeader('accept', 'application/dns-message');
-                $request->setHeader('content-length', \strlen($data));
+                $request->setHeader('content-length', (string) \strlen($data));
                 $request->setHeaders($nameserver->getHeaders());
                 break;
             case NameserverType::GOOGLE_JSON:
@@ -374,6 +375,7 @@ final class Rfc8484StubResolver implements Resolver
                 $request->setHeaders($nameserver->getHeaders());
                 break;
         }
+        \assert($request !== null);
 
         $response = $this->httpClient->request($request, $cancellation);
         if ($response->getStatus() !== 200) {
@@ -390,7 +392,7 @@ final class Rfc8484StubResolver implements Resolver
         }
     }
 
-    private function normalizeName(string $name, int $type)
+    private function normalizeName(string $name, int $type): string
     {
         if ($type === Record::PTR) {
             if (($packedIp = @\inet_pton($name)) !== false) {
@@ -434,7 +436,10 @@ final class Rfc8484StubResolver implements Resolver
         return self::CACHE_PREFIX.$name."#".$type;
     }
 
-    private function decodeCachedResult(string $name, int $type, string $encoded)
+    /**
+     * @return list<Record>
+     */
+    private function decodeCachedResult(string $name, int $type, string $encoded): array
     {
         $decoded = \json_decode($encoded, true);
 

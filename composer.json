@@ -41,7 +41,7 @@
         }
     ],
     "require": {
-        "php": ">=7.0",
+        "php": ">=8.1",
         "amphp/cache": "^v2-dev",
         "amphp/parser": "^1",
         "danog/libdns-json": "^0.1",

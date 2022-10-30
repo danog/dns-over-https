@@ -15,7 +15,7 @@ use Amp\Http\Client\HttpClientBuilder;
 final class DoHConfig
 {
     /**
-     * @var non-empty-array<NameServer> $nameservers
+     * @var non-empty-array<Nameserver> $nameservers
      */
     private readonly array $nameservers;
     private readonly DelegateHttpClient $httpClient;
@@ -24,15 +24,17 @@ final class DoHConfig
     private readonly Cache $cache;
 
     /**
-     * @param non-empty-array<NameServer> $nameservers
+     * @param non-empty-array<Nameserver> $nameservers
      */
     public function __construct(array $nameservers, ?DelegateHttpClient $httpClient = null, ?Rfc1035StubResolver $resolver = null, ?ConfigLoader $configLoader = null, ?Cache $cache = null)
     {
+        /** @psalm-suppress TypeDoesNotContainType */
         if (\count($nameservers) < 1) {
             throw new ConfigException("At least one nameserver is required for a valid config");
         }
 
         foreach ($nameservers as $nameserver) {
+            /** @psalm-suppress DocblockContradiction */
             if (!($nameserver instanceof Nameserver)) {
                 throw new ConfigException("Invalid nameserver: {$nameserver}");
             }

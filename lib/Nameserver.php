@@ -6,6 +6,10 @@ use Amp\Dns\ConfigException;
 
 final class Nameserver
 {
+    public const RFC8484_GET = NameserverType::RFC8484_GET;
+    public const RFC8484_POST = NameserverType::RFC8484_POST;
+    public const GOOGLE_JSON = NameserverType::GOOGLE_JSON;
+
     private readonly string $host;
 
     public function __construct(
