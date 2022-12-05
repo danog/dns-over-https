@@ -8,6 +8,8 @@ use Amp\CompositeException;
 use Amp\Dns\Config;
 use Amp\Dns\ConfigException;
 use Amp\Dns\ConfigLoader;
+use Amp\Dns\DnsConfig;
+use Amp\Dns\DnsConfigLoader;
 use Amp\Dns\DnsException;
 use Amp\Dns\NoRecordException;
 use Amp\Dns\Record;
@@ -20,6 +22,7 @@ use Amp\Http\Client\Request;
 use Amp\NullCancellation;
 use danog\LibDNSJson\JsonDecoder;
 use danog\LibDNSJson\JsonDecoderFactory;
+use danog\LibDNSJson\QueryEncoder;
 use danog\LibDNSJson\QueryEncoderFactory;
 use LibDNS\Decoder\Decoder;
 use LibDNS\Decoder\DecoderFactory;
@@ -38,9 +41,9 @@ final class Rfc8484StubResolver implements Resolver
 {
     const CACHE_PREFIX = "amphp.doh.";
 
-    private ConfigLoader $configLoader;
+    private DnsConfigLoader $configLoader;
     private QuestionFactory $questionFactory;
-    private ?Config $config = null;
+    private ?DnsConfig $config = null;
 
     private ?Future $pendingConfig = null;
 
@@ -52,7 +55,7 @@ final class Rfc8484StubResolver implements Resolver
     private Rfc1035StubResolver $subResolver;
     private Encoder $encoder;
     private Decoder $decoder;
-    private Encoder $encoderJson;
+    private QueryEncoder $encoderJson;
     private JsonDecoder $decoderJson;
     private MessageFactory $messageFactory;
     private DelegateHttpClient $httpClient;
@@ -82,7 +85,7 @@ final class Rfc8484StubResolver implements Resolver
             try {
                 $this->reloadConfig();
             } catch (ConfigException $e) {
-                $this->config = new Config(['0.0.0.0'], []);
+                $this->config = new DnsConfig(['0.0.0.0'], []);
             }
         }
 
@@ -266,7 +269,7 @@ final class Rfc8484StubResolver implements Resolver
                     try {
                         $this->reloadConfig();
                     } catch (ConfigException $e) {
-                        $this->config = new Config(['0.0.0.0'], []);
+                        $this->config = new DnsConfig(['0.0.0.0'], []);
                     }
                 }
 

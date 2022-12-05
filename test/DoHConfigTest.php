@@ -6,7 +6,9 @@ use Amp\Cache\LocalCache;
 use Amp\Dns\ConfigException;
 use Amp\Dns\Rfc1035StubResolver;
 use Amp\Dns\UnixConfigLoader;
+use Amp\Dns\UnixDnsConfigLoader;
 use Amp\Dns\WindowsConfigLoader;
+use Amp\Dns\WindowsDnsConfigLoader;
 use Amp\DoH\DoHConfig;
 use Amp\DoH\Nameserver;
 use Amp\DoH\NameserverType;
@@ -120,8 +122,8 @@ class DoHConfigTest extends AsyncTestCase
     {
         return [
             [\stripos(PHP_OS, "win") === 0
-                ? new WindowsConfigLoader
-                : new UnixConfigLoader],
+                ? new WindowsDnsConfigLoader()
+                : new UnixDnsConfigLoader()],
         ];
     }
     /**
