@@ -5,15 +5,15 @@ namespace Amp\DoH;
 use Amp\Cache\Cache;
 use Amp\Cancellation;
 use Amp\CompositeException;
-use Amp\Dns\ConfigException;
 use Amp\Dns\DnsConfig;
+use Amp\Dns\DnsConfigException;
 use Amp\Dns\DnsConfigLoader;
 use Amp\Dns\DnsException;
-use Amp\Dns\NoRecordException;
-use Amp\Dns\Record;
-use Amp\Dns\Resolver;
-use Amp\Dns\Rfc1035StubResolver;
-use Amp\Dns\TimeoutException;
+use Amp\Dns\DnsRecord;
+use Amp\Dns\DnsResolver;
+use Amp\Dns\DnsTimeoutException;
+use Amp\Dns\MissingDnsRecordException;
+use Amp\Dns\Rfc1035StubDnsResolver;
 use Amp\Future;
 use Amp\Http\Client\DelegateHttpClient;
 use Amp\Http\Client\Request;
@@ -35,7 +35,7 @@ use LibDNS\Records\QuestionFactory;
 use function Amp\async;
 use function Amp\Dns\normalizeName;
 
-final class Rfc8484StubResolver implements Resolver
+final class Rfc8484StubDohResolver implements DnsResolver
 {
     const CACHE_PREFIX = "amphp.doh.";
 
@@ -50,7 +50,7 @@ final class Rfc8484StubResolver implements Resolver
     /** @var Future[] */
     private array $pendingQueries = [];
 
-    private Rfc1035StubResolver $subResolver;
+    private DnsResolver $subResolver;
     private Encoder $encoder;
     private Decoder $decoder;
     private QueryEncoder $encoderJson;
@@ -75,31 +75,31 @@ final class Rfc8484StubResolver implements Resolver
     /** @inheritdoc */
     public function resolve(string $name, int $typeRestriction = null, ?Cancellation $cancellation = null): array
     {
-        if ($typeRestriction !== null && $typeRestriction !== Record::A && $typeRestriction !== Record::AAAA) {
-            throw new \Error("Invalid value for parameter 2: null|Record::A|Record::AAAA expected");
+        if ($typeRestriction !== null && $typeRestriction !== DnsRecord::A && $typeRestriction !== DnsRecord::AAAA) {
+            throw new \Error("Invalid value for parameter 2: null|DnsRecord::A|DnsRecord::AAAA expected");
         }
 
         if (!$this->config) {
             try {
                 $this->reloadConfig();
-            } catch (ConfigException $e) {
+            } catch (DnsConfigException $e) {
                 $this->config = new DnsConfig(['0.0.0.0'], []);
             }
         }
 
         switch ($typeRestriction) {
-            case Record::A:
+            case DnsRecord::A:
                 if (\filter_var($name, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
-                    return [new Record($name, Record::A, null)];
+                    return [new DnsRecord($name, DnsRecord::A, null)];
                 }
 
                 if (\filter_var($name, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
                     throw new DnsException("Got an IPv6 address, but type is restricted to IPv4");
                 }
                 break;
-            case Record::AAAA:
+            case DnsRecord::AAAA:
                 if (\filter_var($name, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
-                    return [new Record($name, Record::AAAA, null)];
+                    return [new DnsRecord($name, DnsRecord::AAAA, null)];
                 }
 
                 if (\filter_var($name, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
@@ -108,11 +108,11 @@ final class Rfc8484StubResolver implements Resolver
                 break;
             default:
                 if (\filter_var($name, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
-                    return [new Record($name, Record::A, null)];
+                    return [new DnsRecord($name, DnsRecord::A, null)];
                 }
 
                 if (\filter_var($name, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
-                    return [new Record($name, Record::AAAA, null)];
+                    return [new DnsRecord($name, DnsRecord::AAAA, null)];
                 }
                 break;
         }
@@ -128,9 +128,9 @@ final class Rfc8484StubResolver implements Resolver
         // Follow RFC 6761 and never send queries for localhost to the caching DNS server
         // Usually, these queries are already resolved via queryHosts()
         if ($name === 'localhost') {
-            return $typeRestriction === Record::AAAA
-                ? [new Record('::1', Record::AAAA, null)]
-                : [new Record('127.0.0.1', Record::A, null)];
+            return $typeRestriction === DnsRecord::AAAA
+                ? [new DnsRecord('::1', DnsRecord::AAAA, null)]
+                : [new DnsRecord('127.0.0.1', DnsRecord::A, null)];
         }
 
         if ($this->dohConfig->isNameserver($name)) {
@@ -157,15 +157,15 @@ final class Rfc8484StubResolver implements Resolver
                     }
 
                     [$exceptions, $records] = Future\awaitAll([
-                        async(fn () => $this->query($searchName, Record::A, $cancellation)),
-                        async(fn () => $this->query($searchName, Record::AAAA, $cancellation)),
+                        async(fn () => $this->query($searchName, DnsRecord::A, $cancellation)),
+                        async(fn () => $this->query($searchName, DnsRecord::AAAA, $cancellation)),
                     ]);
 
                     if (\count($exceptions) === 2) {
                         $errors = [];
 
                         foreach ($exceptions as $reason) {
-                            if ($reason instanceof NoRecordException) {
+                            if ($reason instanceof MissingDnsRecordException) {
                                 throw $reason;
                             }
 
@@ -184,13 +184,13 @@ final class Rfc8484StubResolver implements Resolver
                     }
 
                     return \array_merge(...$records);
-                } catch (NoRecordException) {
+                } catch (MissingDnsRecordException) {
                     try {
-                        $cnameRecords = $this->query($searchName, Record::CNAME, $cancellation);
+                        $cnameRecords = $this->query($searchName, DnsRecord::CNAME, $cancellation);
                         $name = $cnameRecords[0]->getValue();
                         continue;
-                    } catch (NoRecordException) {
-                        $dnameRecords = $this->query($searchName, Record::DNAME, $cancellation);
+                    } catch (MissingDnsRecordException) {
+                        $dnameRecords = $this->query($searchName, DnsRecord::DNAME, $cancellation);
                         $name = $dnameRecords[0]->getValue();
                         continue;
                     }
@@ -219,7 +219,9 @@ final class Rfc8484StubResolver implements Resolver
         if (!$this->pendingConfig) {
             $promise = async(function () {
                 try {
-                    $this->subResolver->reloadConfig();
+                    if ($this->subResolver instanceof Rfc1035StubDnsResolver) {
+                        $this->subResolver->reloadConfig();
+                    }
                     $this->config = $this->configLoader->loadConfig();
                 } finally {
                     $this->pendingConfig = null;
@@ -237,15 +239,15 @@ final class Rfc8484StubResolver implements Resolver
         $hosts = $this->config->getKnownHosts();
         $records = [];
 
-        $returnIPv4 = $typeRestriction === null || $typeRestriction === Record::A;
-        $returnIPv6 = $typeRestriction === null || $typeRestriction === Record::AAAA;
+        $returnIPv4 = $typeRestriction === null || $typeRestriction === DnsRecord::A;
+        $returnIPv6 = $typeRestriction === null || $typeRestriction === DnsRecord::AAAA;
 
-        if ($returnIPv4 && isset($hosts[Record::A][$name])) {
-            $records[] = new Record($hosts[Record::A][$name], Record::A, null);
+        if ($returnIPv4 && isset($hosts[DnsRecord::A][$name])) {
+            $records[] = new DnsRecord($hosts[DnsRecord::A][$name], DnsRecord::A, null);
         }
 
-        if ($returnIPv6 && isset($hosts[Record::AAAA][$name])) {
-            $records[] = new Record($hosts[Record::AAAA][$name], Record::AAAA, null);
+        if ($returnIPv6 && isset($hosts[DnsRecord::AAAA][$name])) {
+            $records[] = new DnsRecord($hosts[DnsRecord::AAAA][$name], DnsRecord::AAAA, null);
         }
 
         return $records;
@@ -266,7 +268,7 @@ final class Rfc8484StubResolver implements Resolver
                 if (!$this->config) {
                     try {
                         $this->reloadConfig();
-                    } catch (ConfigException $e) {
+                    } catch (DnsConfigException $e) {
                         $this->config = new DnsConfig(['0.0.0.0'], []);
                     }
                 }
@@ -296,7 +298,7 @@ final class Rfc8484StubResolver implements Resolver
                         $this->assertAcceptableResponse($response);
 
                         if ($response->isTruncated()) {
-                            throw new DnsException("Server returned a truncated response for '{$name}' (".Record::getName($type).")");
+                            throw new DnsException("Server returned a truncated response for '{$name}' (".DnsRecord::getName($type).")");
                         }
 
                         $answers = $response->getAnswerRecords();
@@ -319,22 +321,22 @@ final class Rfc8484StubResolver implements Resolver
                         if (!isset($result[$type])) {
                             // "it MUST NOT cache it for longer than five (5) minutes" per RFC 2308 section 7.1
                             $this->cache->set($this->getCacheKey($name, $type), \json_encode([]), 300);
-                            throw new NoRecordException("No records returned for '{$name}' (".Record::getName($type).")");
+                            throw new MissingDnsRecordException("No records returned for '{$name}' (".DnsRecord::getName($type).")");
                         }
 
                         return \array_map(function ($data) use ($type, $ttls) {
-                            return new Record($data, $type, $ttls[$type]);
+                            return new DnsRecord($data, $type, $ttls[$type]);
                         }, $result[$type]);
-                    } catch (TimeoutException) {
+                    } catch (DnsTimeoutException) {
                         $i = ++$attempt % \count($nameservers);
                         $nameserver = $nameservers[$i];
                     }
                 }
 
-                throw new TimeoutException(\sprintf(
+                throw new DnsTimeoutException(\sprintf(
                     "No response for '%s' (%s) from any nameserver within %d ms after %d attempts, tried %s",
                     $name,
-                    Record::getName($type),
+                    DnsRecord::getName($type),
                     $this->config->getTimeout(),
                     $attempts,
                     \implode(", ", $attemptDescription)
@@ -395,7 +397,7 @@ final class Rfc8484StubResolver implements Resolver
 
     private function normalizeName(string $name, int $type): string
     {
-        if ($type === Record::PTR) {
+        if ($type === DnsRecord::PTR) {
             if (($packedIp = @\inet_pton($name)) !== false) {
                 if (isset($packedIp[4])) { // IPv6
                     $name = \wordwrap(\strrev(\bin2hex($packedIp)), 1, ".", true).".ip6.arpa";
@@ -403,7 +405,7 @@ final class Rfc8484StubResolver implements Resolver
                     $name = \inet_ntop(\strrev($packedIp)).".in-addr.arpa";
                 }
             }
-        } elseif (\in_array($type, [Record::A, Record::AAAA])) {
+        } elseif (\in_array($type, [DnsRecord::A, DnsRecord::AAAA])) {
             $name = normalizeName($name);
         }
 
@@ -438,20 +440,20 @@ final class Rfc8484StubResolver implements Resolver
     }
 
     /**
-     * @return list<Record>
+     * @return list<DnsRecord>
      */
     private function decodeCachedResult(string $name, int $type, string $encoded): array
     {
         $decoded = \json_decode($encoded, true);
 
         if (!$decoded) {
-            throw new NoRecordException("No records returned for {$name} (cached result)");
+            throw new MissingDnsRecordException("No records returned for {$name} (cached result)");
         }
 
         $result = [];
 
         foreach ($decoded as $data) {
-            $result[] = new Record($data, $type);
+            $result[] = new DnsRecord($data, $type);
         }
 
         return $result;

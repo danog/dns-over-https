@@ -39,7 +39,7 @@ $nameservers []= new DoH\Nameserver('https://google.com/resolve', DoH\Nameserver
 $DohConfig = new DoH\DoHConfig($nameservers);
 
 // Set default resolver for all AMPHP apps to DNS-over-HTTPS resolver
-Dns\resolver(new DoH\Rfc8484StubResolver($DohConfig));
+Dns\dnsResolver(new DoH\Rfc8484StubDohResolver($DohConfig));
 ```
 
 In the last example, [domain fronting](https://en.wikipedia.org/wiki/Domain_fronting), useful to bypass censorship in non-free countries: from the outside, it looks like the DoH client is connecting to `https://google.com`, but by sending a custom Host HTTP header to the server after the TLS handshake is finished, the server that actually replies is `https://dns.google.com` (this is only possible if both servers are behind a common CDN that allows domain fronting, like google's CDN).  
@@ -47,7 +47,7 @@ In normal conditions, it is recommended that you use mozilla+cloudflare's DoH en
 
 Other parameters that can be passed to the DoHConfig constructor are:  
 ```php
-public function __construct(array $nameservers, \Amp\Artax\Client $artax = null, \Amp\Dns\Resolver $resolver = null, \Amp\Dns\ConfigLoader $configLoader = null, \Amp\Cache\Cache $cache = null);
+public function __construct(array $nameservers, \Amp\Artax\Client $artax = null, \Amp\Dns\dnsResolver $resolver = null, \Amp\Dns\ConfigLoader $configLoader = null, \Amp\Cache\Cache $cache = null);
 ```
 
 You can provide a custom HTTP client to use for resolution, or use a custom subresolver (the subresolver is used to make the first and only plaintext DNS request to obtain the address of the DoH nameserver), or use a [custom configuration](https://amphp.org/dns/#configuration) for the DoH client (and the subresolver, too, if the configuration is provided but the resolver isn't).  
@@ -55,7 +55,7 @@ The last parameter can be a custom async caching object.
 
 ### Address Resolution
 
-To resolve addresses using `dns-over-https` first set the global DNS resolver as explained in the [configuration section](#configuration), or use an instance of `Rfc8484StubResolver` instead of `Rfc1035StubResolver`.  
+To resolve addresses using `dns-over-https` first set the global DNS resolver as explained in the [configuration section](#configuration), or use an instance of `Rfc8484StubDohResolver` instead of `Rfc1035StubResolver`.  
 
 `Amp\Dns\resolve` provides hostname to IP address resolution. It returns an array of IPv4 and IPv6 addresses by default. The type of IP addresses returned can be restricted by passing a second argument with the respective type.
 
@@ -76,7 +76,7 @@ $records = Amp\Dns\resolve("github.com", Amp\Dns\Record::A);
 
 ### Custom Queries
 
-To resolve addresses using `dns-over-https` first set the global DNS resolver as explained in the [configuration section](#configuration), or use an instance of `Rfc8484StubResolver` instead of `Rfc1035StubResolver`.  
+To resolve addresses using `dns-over-https` first set the global DNS resolver as explained in the [configuration section](#configuration), or use an instance of `Rfc8484StubDohResolver` instead of `Rfc1035StubResolver`.  
 
 `Amp\Dns\query` supports the various other DNS record types such as `MX`, `PTR`, or `TXT`. It automatically rewrites passed IP addresses for `PTR` lookups.
  
@@ -92,7 +92,7 @@ $records = Amp\Dns\query("8.8.8.8", Amp\Dns\Record::PTR);
 
 ### Caching
 
-The `Rfc8484StubResolver` caches responses by default in an `Amp\Cache\LocalCache`. You can set any other `Amp\Cache\Cache` implementation by creating a custom instance of `Rfc8484StubResolver` and setting that via `Amp\Dns\resolver()`, but it's usually unnecessary. If you have a lot of very short running scripts, you might want to consider using a local DNS resolver with a cache instead of setting a custom cache implementation, such as `dnsmasq`. 
+The `Rfc8484StubDohResolver` caches responses by default in an `Amp\Cache\LocalCache`. You can set any other `Amp\Cache\Cache` implementation by creating a custom instance of `Rfc8484StubDohResolver` and setting that via `Amp\Dns\dnsResolver()`, but it's usually unnecessary. If you have a lot of very short running scripts, you might want to consider using a local DNS resolver with a cache instead of setting a custom cache implementation, such as `dnsmasq`. 
 
 ### Reloading Configuration
 
@@ -100,7 +100,7 @@ The subresolver (which is the resolver set in the `DoHConfig`, `Rfc1035StubResol
 
 ```php
 Loop::repeat(60000, function () use ($resolver) {
-    Amp\Dns\resolver()->reloadConfig();
+    Amp\Dns\dnsResolver()->reloadConfig();
 });
 ```
 

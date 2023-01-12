@@ -2,22 +2,25 @@
 
 namespace Amp\DoH\Test;
 
-use Amp\Dns\ConfigException;
+use Amp\Dns\DnsConfigException;
 use Amp\DoH\Nameserver;
 use Amp\DoH\NameserverType;
 use Amp\PHPUnit\AsyncTestCase;
 
+/** @psalm-suppress PropertyNotSetInConstructor */
 class NameserverTest extends AsyncTestCase
 {
     /**
-     *
      * @dataProvider provideValidServers
      */
-    public function testAcceptsValidServers($nameserver, $type = NameserverType::RFC8484_POST, $headers = [])
+    public function testAcceptsValidServers(string $nameserver, NameserverType $type = NameserverType::RFC8484_POST, array $headers = []): void
     {
         $this->assertInstanceOf(Nameserver::class, new Nameserver($nameserver, $type, $headers));
     }
 
+    /**
+     * @return list<list{0: string, 1?: NameserverType::RFC8484_POST}>
+     */
     public function provideValidServers()
     {
         return [
@@ -30,16 +33,18 @@ class NameserverTest extends AsyncTestCase
     }
 
     /**
-     *
      * @dataProvider provideInvalidServers
      */
-    public function testRejectsInvalidServers($nameserver, $type = NameserverType::RFC8484_POST, $headers = [])
+    public function testRejectsInvalidServers(string $nameserver, NameserverType $type = NameserverType::RFC8484_POST, array $headers = []): void
     {
-        $this->expectException(ConfigException::class);
+        $this->expectException(DnsConfigException::class);
         new Nameserver($nameserver, $type, $headers);
     }
 
-    public function provideInvalidServers()
+    /**
+     * @return list<list{0: string, 1?: NameserverType::RFC8484_POST}>
+     */
+    public function provideInvalidServers(): array
     {
         return [
             [''],

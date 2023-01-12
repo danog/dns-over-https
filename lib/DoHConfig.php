@@ -4,9 +4,10 @@ namespace Amp\DoH;
 
 use Amp\Cache\Cache;
 use Amp\Cache\LocalCache;
-use Amp\Dns\ConfigException;
+use Amp\Dns\DnsConfigException;
 use Amp\Dns\DnsConfigLoader;
-use Amp\Dns\Rfc1035StubResolver;
+use Amp\Dns\DnsResolver;
+use Amp\Dns\Rfc1035StubDnsResolver;
 use Amp\Dns\UnixDnsConfigLoader;
 use Amp\Dns\WindowsDnsConfigLoader;
 use Amp\Http\Client\DelegateHttpClient;
@@ -19,24 +20,24 @@ final class DoHConfig
      */
     private readonly array $nameservers;
     private readonly DelegateHttpClient $httpClient;
-    private readonly Rfc1035StubResolver $subResolver;
+    private readonly DnsResolver $subResolver;
     private readonly DnsConfigLoader $configLoader;
     private readonly Cache $cache;
 
     /**
      * @param non-empty-array<Nameserver> $nameservers
      */
-    public function __construct(array $nameservers, ?DelegateHttpClient $httpClient = null, ?Rfc1035StubResolver $resolver = null, ?DnsConfigLoader $configLoader = null, ?Cache $cache = null)
+    public function __construct(array $nameservers, ?DelegateHttpClient $httpClient = null, ?DnsResolver $resolver = null, ?DnsConfigLoader $configLoader = null, ?Cache $cache = null)
     {
         /** @psalm-suppress TypeDoesNotContainType */
         if (\count($nameservers) < 1) {
-            throw new ConfigException("At least one nameserver is required for a valid config");
+            throw new DnsConfigException("At least one nameserver is required for a valid config");
         }
 
         foreach ($nameservers as $nameserver) {
             /** @psalm-suppress DocblockContradiction */
             if (!($nameserver instanceof Nameserver)) {
-                throw new ConfigException("Invalid nameserver: {$nameserver}");
+                throw new DnsConfigException("Invalid nameserver: {$nameserver}");
             }
         }
 
@@ -46,7 +47,7 @@ final class DoHConfig
         $this->configLoader = $configLoader ?? (\stripos(PHP_OS, "win") === 0
             ? new WindowsDnsConfigLoader()
             : new UnixDnsConfigLoader());
-        $this->subResolver = $resolver ?? new Rfc1035StubResolver(null, $this->configLoader);
+        $this->subResolver = $resolver ?? new Rfc1035StubDnsResolver(null, $this->configLoader);
     }
 
     /**
@@ -80,7 +81,7 @@ final class DoHConfig
     {
         return $this->configLoader;
     }
-    public function getSubResolver(): Rfc1035StubResolver
+    public function getSubResolver(): DnsResolver
     {
         return $this->subResolver;
     }

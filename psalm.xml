@@ -8,6 +8,8 @@
 >
     <projectFiles>
         <directory name="lib" />
+        <directory name="test" />
+        <directory name="examples" />
         <ignoreFiles>
             <directory name="vendor" />
         </ignoreFiles>

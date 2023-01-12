@@ -13,7 +13,7 @@ $customConfigLoader = new class implements Dns\DnsConfigLoader {
         return new Dns\DnsConfig([
             "8.8.8.8:53",
             "[2001:4860:4860::8888]:53",
-        ], $hosts, 5, 3);
+        ], $hosts);
     }
 };
 
@@ -28,7 +28,7 @@ $DohConfig = new DoH\DoHConfig(
     null,
     $customConfigLoader
 );
-Dns\resolver(new DoH\Rfc8484StubResolver($DohConfig));
+Dns\dnsResolver(new DoH\Rfc8484StubDohResolver($DohConfig));
 
 $hostname = $argv[1] ?? "amphp.org";
 

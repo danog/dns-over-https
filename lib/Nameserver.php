@@ -2,7 +2,7 @@
 
 namespace Amp\DoH;
 
-use Amp\Dns\ConfigException;
+use Amp\Dns\DnsConfigException;
 
 final class Nameserver
 {
@@ -18,7 +18,7 @@ final class Nameserver
         private readonly array $headers = []
     ) {
         if (\parse_url($uri, PHP_URL_SCHEME) !== 'https') {
-            throw new ConfigException('Did not provide a valid HTTPS url!');
+            throw new DnsConfigException('Did not provide a valid HTTPS url!');
         }
         $this->host = \parse_url($uri, PHP_URL_HOST);
     }

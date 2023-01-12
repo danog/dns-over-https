@@ -16,14 +16,14 @@ $domains = array_map(function ($line) {
 array_shift($domains);
 
 $DohConfig = new DoH\DoHConfig([new DoH\Nameserver('https://mozilla.cloudflare-dns.com/dns-query')]);
-Dns\resolver(new DoH\Rfc8484StubResolver($DohConfig));
+Dns\dnsResolver(new DoH\Rfc8484StubDohResolver($DohConfig));
 
 print "Starting sequential queries...\r\n\r\n";
 
 $timings = [];
 
 for ($i = 0; $i < 10; $i++) {
-    $start = microtime(1);
+    $start = microtime(true);
     $domain = $domains[random_int(0, count($domains) - 1)];
 
     try {
@@ -32,7 +32,7 @@ for ($i = 0; $i < 10; $i++) {
         pretty_print_error($domain, $e);
     }
 
-    $time = round(microtime(1) - $start, 2);
+    $time = round(microtime(true) - $start, 2);
     $timings[] = $time;
 
     printf("%'-74s\r\n\r\n", " in " . $time . " ms");
