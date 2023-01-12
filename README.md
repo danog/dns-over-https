@@ -26,8 +26,8 @@ use Amp\Dns\DnsRecord;
 use function Amp\Future\awaitFirst;
 
 // Set default resolver to DNS-over-HTTPS resolver
-$DohConfig = new DoH\DoHConfig([new DoH\Nameserver('https://mozilla.cloudflare-dns.com/dns-query')]); // Defaults to DoH\NameserverType::RFC8484_POST
-Dns\dnsResolver(new DoH\Rfc8484StubDohResolver($DohConfig));
+$DohConfig = new DoH\DoHConfig([new DoH\DoHNameserver('https://mozilla.cloudflare-dns.com/dns-query')]); // Defaults to DoH\DoHNameserverType::RFC8484_POST
+Dns\dnsResolver(new DoH\Rfc8484StubDoHResolver($DohConfig));
 
 $githubIpv4 = Dns\resolve("github.com", DnsRecord::A);
 pretty_print_records("github.com", $githubIpv4);

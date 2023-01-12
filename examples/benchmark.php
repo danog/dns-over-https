@@ -15,8 +15,8 @@ $domains = array_map(function ($line) {
 // Remove "URL" header
 array_shift($domains);
 
-$DohConfig = new DoH\DoHConfig([new DoH\Nameserver('https://mozilla.cloudflare-dns.com/dns-query')]);
-Dns\dnsResolver(new DoH\Rfc8484StubDohResolver($DohConfig));
+$DohConfig = new DoH\DoHConfig([new DoH\DoHNameserver('https://mozilla.cloudflare-dns.com/dns-query')]);
+Dns\dnsResolver(new DoH\Rfc8484StubDoHResolver($DohConfig));
 
 print "Starting sequential queries...\r\n\r\n";
 

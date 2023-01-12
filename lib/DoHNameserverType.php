@@ -2,7 +2,7 @@
 
 namespace Amp\DoH;
 
-enum NameserverType
+enum DoHNameserverType
 {
     case RFC8484_GET;
     case RFC8484_POST;

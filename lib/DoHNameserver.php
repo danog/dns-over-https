@@ -4,17 +4,17 @@ namespace Amp\DoH;
 
 use Amp\Dns\DnsConfigException;
 
-final class Nameserver
+final class DoHNameserver
 {
-    public const RFC8484_GET = NameserverType::RFC8484_GET;
-    public const RFC8484_POST = NameserverType::RFC8484_POST;
-    public const GOOGLE_JSON = NameserverType::GOOGLE_JSON;
+    public const RFC8484_GET = DoHNameserverType::RFC8484_GET;
+    public const RFC8484_POST = DoHNameserverType::RFC8484_POST;
+    public const GOOGLE_JSON = DoHNameserverType::GOOGLE_JSON;
 
     private readonly string $host;
 
     public function __construct(
         private readonly string $uri,
-        private readonly NameserverType $type = NameserverType::RFC8484_POST,
+        private readonly DoHNameserverType $type = DoHNameserverType::RFC8484_POST,
         private readonly array $headers = []
     ) {
         if (\parse_url($uri, PHP_URL_SCHEME) !== 'https') {
@@ -34,7 +34,7 @@ final class Nameserver
     {
         return $this->headers;
     }
-    public function getType(): NameserverType
+    public function getType(): DoHNameserverType
     {
         return $this->type;
     }

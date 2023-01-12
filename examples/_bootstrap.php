@@ -14,7 +14,7 @@ function pretty_print_records(string $queryName, array $records): void
     $format = "%-10s %-56s %-5d\r\n";
 
     foreach ($records as $record) {
-        print sprintf($format, DnsRecord::getName($record->getType()), $record->getValue(), $record->getTtl());
+        print sprintf($format, DnsRecord::getName($record->getType()), $record->getValue(), $record->getTtl() ?? 0);
     }
 }
 

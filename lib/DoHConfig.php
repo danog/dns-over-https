@@ -16,7 +16,7 @@ use Amp\Http\Client\HttpClientBuilder;
 final class DoHConfig
 {
     /**
-     * @var non-empty-array<Nameserver> $nameservers
+     * @var non-empty-array<DoHNameserver> $nameservers
      */
     private readonly array $nameservers;
     private readonly DelegateHttpClient $httpClient;
@@ -25,7 +25,7 @@ final class DoHConfig
     private readonly Cache $cache;
 
     /**
-     * @param non-empty-array<Nameserver> $nameservers
+     * @param non-empty-array<DoHNameserver> $nameservers
      */
     public function __construct(array $nameservers, ?DelegateHttpClient $httpClient = null, ?DnsResolver $resolver = null, ?DnsConfigLoader $configLoader = null, ?Cache $cache = null)
     {
@@ -36,7 +36,7 @@ final class DoHConfig
 
         foreach ($nameservers as $nameserver) {
             /** @psalm-suppress DocblockContradiction */
-            if (!($nameserver instanceof Nameserver)) {
+            if (!($nameserver instanceof DoHNameserver)) {
                 throw new DnsConfigException("Invalid nameserver: {$nameserver}");
             }
         }
@@ -51,14 +51,14 @@ final class DoHConfig
     }
 
     /**
-     * @return non-empty-array<Nameserver>
+     * @return non-empty-array<DoHNameserver>
      */
-    public function getNameservers(): array
+    public function getDoHNameservers(): array
     {
         return $this->nameservers;
     }
 
-    public function isNameserver(string $string): bool
+    public function isDoHNameserver(string $string): bool
     {
         foreach ($this->nameservers as $nameserver) {
             if ($nameserver->getHost() === $string) {

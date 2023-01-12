@@ -3,46 +3,46 @@
 namespace Amp\DoH\Test;
 
 use Amp\Dns\DnsConfigException;
-use Amp\DoH\Nameserver;
-use Amp\DoH\NameserverType;
+use Amp\DoH\DoHNameserver;
+use Amp\DoH\DoHNameserverType;
 use Amp\PHPUnit\AsyncTestCase;
 
 /** @psalm-suppress PropertyNotSetInConstructor */
-class NameserverTest extends AsyncTestCase
+class DoHNameserverTest extends AsyncTestCase
 {
     /**
      * @dataProvider provideValidServers
      */
-    public function testAcceptsValidServers(string $nameserver, NameserverType $type = NameserverType::RFC8484_POST, array $headers = []): void
+    public function testAcceptsValidServers(string $nameserver, DoHNameserverType $type = DoHNameserverType::RFC8484_POST, array $headers = []): void
     {
-        $this->assertInstanceOf(Nameserver::class, new Nameserver($nameserver, $type, $headers));
+        $this->assertInstanceOf(DoHNameserver::class, new DoHNameserver($nameserver, $type, $headers));
     }
 
     /**
-     * @return list<list{0: string, 1?: NameserverType::RFC8484_POST}>
+     * @return list<list{0: string, 1?: DoHNameserverType::RFC8484_POST}>
      */
     public function provideValidServers()
     {
         return [
             ['https://mozilla.cloudflare-dns.com/dns-query'],
-            ['https://mozilla.cloudflare-dns.com/dns-query', NameserverType::RFC8484_POST],
-            ['https://mozilla.cloudflare-dns.com/dns-query', NameserverType::RFC8484_GET],
-            ['https://mozilla.cloudflare-dns.com/dns-query', NameserverType::GOOGLE_JSON],
-            ['https://dns.google/resolve', NameserverType::GOOGLE_JSON],
+            ['https://mozilla.cloudflare-dns.com/dns-query', DoHNameserverType::RFC8484_POST],
+            ['https://mozilla.cloudflare-dns.com/dns-query', DoHNameserverType::RFC8484_GET],
+            ['https://mozilla.cloudflare-dns.com/dns-query', DoHNameserverType::GOOGLE_JSON],
+            ['https://dns.google/resolve', DoHNameserverType::GOOGLE_JSON],
         ];
     }
 
     /**
      * @dataProvider provideInvalidServers
      */
-    public function testRejectsInvalidServers(string $nameserver, NameserverType $type = NameserverType::RFC8484_POST, array $headers = []): void
+    public function testRejectsInvalidServers(string $nameserver, DoHNameserverType $type = DoHNameserverType::RFC8484_POST, array $headers = []): void
     {
         $this->expectException(DnsConfigException::class);
-        new Nameserver($nameserver, $type, $headers);
+        new DoHNameserver($nameserver, $type, $headers);
     }
 
     /**
-     * @return list<list{0: string, 1?: NameserverType::RFC8484_POST}>
+     * @return list<list{0: string, 1?: DoHNameserverType::RFC8484_POST}>
      */
     public function provideInvalidServers(): array
     {
@@ -63,16 +63,16 @@ class NameserverTest extends AsyncTestCase
             ["[::1:51"],
             ["[::1]:abc"],
             ['http://mozilla.cloudflare-dns.com/dns-query'],
-            ['http://mozilla.cloudflare-dns.com/dns-query', NameserverType::RFC8484_POST],
-            ['http://mozilla.cloudflare-dns.com/dns-query', NameserverType::RFC8484_GET],
-            ['http://mozilla.cloudflare-dns.com/dns-query', NameserverType::GOOGLE_JSON],
-            ['http://dns.google/resolve', NameserverType::GOOGLE_JSON],
+            ['http://mozilla.cloudflare-dns.com/dns-query', DoHNameserverType::RFC8484_POST],
+            ['http://mozilla.cloudflare-dns.com/dns-query', DoHNameserverType::RFC8484_GET],
+            ['http://mozilla.cloudflare-dns.com/dns-query', DoHNameserverType::GOOGLE_JSON],
+            ['http://dns.google/resolve', DoHNameserverType::GOOGLE_JSON],
 
             ['mozilla.cloudflare-dns.com/dns-query'],
-            ['mozilla.cloudflare-dns.com/dns-query', NameserverType::RFC8484_POST],
-            ['mozilla.cloudflare-dns.com/dns-query', NameserverType::RFC8484_GET],
-            ['mozilla.cloudflare-dns.com/dns-query', NameserverType::GOOGLE_JSON],
-            ['dns.google/resolve', NameserverType::GOOGLE_JSON],
+            ['mozilla.cloudflare-dns.com/dns-query', DoHNameserverType::RFC8484_POST],
+            ['mozilla.cloudflare-dns.com/dns-query', DoHNameserverType::RFC8484_GET],
+            ['mozilla.cloudflare-dns.com/dns-query', DoHNameserverType::GOOGLE_JSON],
+            ['dns.google/resolve', DoHNameserverType::GOOGLE_JSON],
         ];
     }
 }

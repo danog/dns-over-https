@@ -35,7 +35,7 @@ use LibDNS\Records\QuestionFactory;
 use function Amp\async;
 use function Amp\Dns\normalizeName;
 
-final class Rfc8484StubDohResolver implements DnsResolver
+final class Rfc8484StubDoHResolver implements DnsResolver
 {
     const CACHE_PREFIX = "amphp.doh.";
 
@@ -133,7 +133,7 @@ final class Rfc8484StubDohResolver implements DnsResolver
                 : [new DnsRecord('127.0.0.1', DnsRecord::A, null)];
         }
 
-        if ($this->dohConfig->isNameserver($name)) {
+        if ($this->dohConfig->isDoHNameserver($name)) {
             return $this->subResolver->resolve($name, $typeRestriction, $cancellation);
         }
         \assert($this->config !== null);
@@ -282,7 +282,7 @@ final class Rfc8484StubDohResolver implements DnsResolver
                     return $this->decodeCachedResult($name, $type, $cachedValue);
                 }
 
-                $nameservers = $this->dohConfig->getNameservers();
+                $nameservers = $this->dohConfig->getDoHNameservers();
                 $attempts = $this->config->getAttempts() * \count($nameservers);
                 $attempt = 0;
 
@@ -351,18 +351,18 @@ final class Rfc8484StubDohResolver implements DnsResolver
         return $promise->await($cancellation);
     }
 
-    private function ask(Nameserver $nameserver, Question $question, Cancellation $cancellation): Message
+    private function ask(DoHNameserver $nameserver, Question $question, Cancellation $cancellation): Message
     {
         $message = $this->createMessage($question, \random_int(0, 0xffff));
         $request = null;
         switch ($nameserver->getType()) {
-            case NameserverType::RFC8484_GET:
+            case DoHNameserverType::RFC8484_GET:
                 $data = $this->encoder->encode($message);
                 $request = new Request($nameserver->getUri().'?'.\http_build_query(['dns' => \base64_encode($data), 'ct' => 'application/dns-message']), "GET");
                 $request->setHeader('accept', 'application/dns-message');
                 $request->setHeaders($nameserver->getHeaders());
                 break;
-            case NameserverType::RFC8484_POST:
+            case DoHNameserverType::RFC8484_POST:
                 $data = $this->encoder->encode($message);
                 $request = new Request($nameserver->getUri(), "POST");
                 $request->setBody($data);
@@ -371,7 +371,7 @@ final class Rfc8484StubDohResolver implements DnsResolver
                 $request->setHeader('content-length', (string) \strlen($data));
                 $request->setHeaders($nameserver->getHeaders());
                 break;
-            case NameserverType::GOOGLE_JSON:
+            case DoHNameserverType::GOOGLE_JSON:
                 $data = $this->encoderJson->encode($message);
                 $request = new Request($nameserver->getUri().'?'.$data, "GET");
                 $request->setHeader('accept', 'application/dns-json');
@@ -387,10 +387,10 @@ final class Rfc8484StubDohResolver implements DnsResolver
         $response = $response->getBody()->buffer();
 
         switch ($nameserver->getType()) {
-            case NameserverType::RFC8484_GET:
-            case NameserverType::RFC8484_POST:
+            case DoHNameserverType::RFC8484_GET:
+            case DoHNameserverType::RFC8484_POST:
                 return $this->decoder->decode($response);
-            case NameserverType::GOOGLE_JSON:
+            case DoHNameserverType::GOOGLE_JSON:
                 return $this->decoderJson->decode($response, $message->getID());
         }
     }

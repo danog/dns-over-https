@@ -20,15 +20,15 @@ $customConfigLoader = new class implements Dns\DnsConfigLoader {
 // Set default resolver to DNS-over-https resolver
 $DohConfig = new DoH\DoHConfig(
     [
-        new DoH\Nameserver('https://daniil.it/dns-query'),
-        new DoH\Nameserver('https://mozilla.nonexistant-dns.com/dns-query'),
-        new DoH\Nameserver('https://mozilla.cloudflare-dns.com/dns-query'), // Will fallback to this
+        new DoH\DoHNameserver('https://daniil.it/dns-query'),
+        new DoH\DoHNameserver('https://mozilla.nonexistant-dns.com/dns-query'),
+        new DoH\DoHNameserver('https://mozilla.cloudflare-dns.com/dns-query'), // Will fallback to this
     ],
     null,
     null,
     $customConfigLoader
 );
-Dns\dnsResolver(new DoH\Rfc8484StubDohResolver($DohConfig));
+Dns\dnsResolver(new DoH\Rfc8484StubDoHResolver($DohConfig));
 
 $hostname = $argv[1] ?? "amphp.org";
 

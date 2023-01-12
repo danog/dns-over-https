@@ -11,8 +11,8 @@ use Amp\Dns\Rfc1035StubDnsResolver;
 use Amp\Dns\UnixDnsConfigLoader;
 use Amp\Dns\WindowsDnsConfigLoader;
 use Amp\DoH\DoHConfig;
-use Amp\DoH\Nameserver;
-use Amp\DoH\NameserverType;
+use Amp\DoH\DoHNameserver;
+use Amp\DoH\DoHNameserverType;
 use Amp\Http\Client\HttpClient;
 use Amp\Http\Client\HttpClientBuilder;
 use Amp\PHPUnit\AsyncTestCase;
@@ -21,7 +21,7 @@ use Amp\PHPUnit\AsyncTestCase;
 class DoHConfigTest extends AsyncTestCase
 {
     /**
-     * @param non-empty-list<NameServer> $nameservers Valid server array.
+     * @param non-empty-list<DoHNameserver> $nameservers Valid server array.
      *
      * @dataProvider provideValidServers
      */
@@ -31,17 +31,17 @@ class DoHConfigTest extends AsyncTestCase
     }
 
     /**
-     * @return list<non-empty-list<list{0: Nameserver, 1?: NameserverType}>>
+     * @return list<non-empty-list<list{0: DoHNameserver, 1?: DoHNameserverType}>>
      */
     public function provideValidServers(): array
     {
         return [
-            [[new Nameserver('https://cloudflare-dns.com/dns-query')]],
-            [[new Nameserver('https://cloudflare-dns.com/dns-query', NameserverType::RFC8484_POST)]],
-            [[new Nameserver('https://cloudflare-dns.com/dns-query', NameserverType::RFC8484_GET)]],
-            [[new Nameserver('https://cloudflare-dns.com/dns-query', NameserverType::GOOGLE_JSON)]],
-            [[new Nameserver('https://dns.google/resolve', NameserverType::GOOGLE_JSON)]],
-            [[new Nameserver('https://cloudflare-dns.com/dns-query', NameserverType::GOOGLE_JSON), new Nameserver('https://dns.google/resolve', NameserverType::GOOGLE_JSON)]],
+            [[new DoHNameserver('https://cloudflare-dns.com/dns-query')]],
+            [[new DoHNameserver('https://cloudflare-dns.com/dns-query', DoHNameserverType::RFC8484_POST)]],
+            [[new DoHNameserver('https://cloudflare-dns.com/dns-query', DoHNameserverType::RFC8484_GET)]],
+            [[new DoHNameserver('https://cloudflare-dns.com/dns-query', DoHNameserverType::GOOGLE_JSON)]],
+            [[new DoHNameserver('https://dns.google/resolve', DoHNameserverType::GOOGLE_JSON)]],
+            [[new DoHNameserver('https://cloudflare-dns.com/dns-query', DoHNameserverType::GOOGLE_JSON), new DoHNameserver('https://dns.google/resolve', DoHNameserverType::GOOGLE_JSON)]],
         ];
     }
 
@@ -90,7 +90,7 @@ class DoHConfigTest extends AsyncTestCase
      */
     public function testAcceptsValidHttpClient(HttpClient $client): void
     {
-        $this->assertInstanceOf(DoHConfig::class, new DoHConfig([new Nameserver('https://cloudflare-dns.com/dns-query')], $client));
+        $this->assertInstanceOf(DoHConfig::class, new DoHConfig([new DoHNameserver('https://cloudflare-dns.com/dns-query')], $client));
     }
 
     /**
@@ -107,7 +107,7 @@ class DoHConfigTest extends AsyncTestCase
      */
     public function testAcceptsValidResolver(DnsResolver $resolver): void
     {
-        $this->assertInstanceOf(DoHConfig::class, new DoHConfig([new Nameserver('https://cloudflare-dns.com/dns-query')], null, $resolver));
+        $this->assertInstanceOf(DoHConfig::class, new DoHConfig([new DoHNameserver('https://cloudflare-dns.com/dns-query')], null, $resolver));
     }
 
     /**
@@ -124,7 +124,7 @@ class DoHConfigTest extends AsyncTestCase
      */
     public function testAcceptsValidConfigLoader(DnsConfigLoader $configLoader): void
     {
-        $this->assertInstanceOf(DoHConfig::class, new DoHConfig([new Nameserver('https://cloudflare-dns.com/dns-query')], null, null, $configLoader));
+        $this->assertInstanceOf(DoHConfig::class, new DoHConfig([new DoHNameserver('https://cloudflare-dns.com/dns-query')], null, null, $configLoader));
     }
 
     /**
@@ -143,7 +143,7 @@ class DoHConfigTest extends AsyncTestCase
      */
     public function testAcceptsValidCache(Cache $cache): void
     {
-        $this->assertInstanceOf(DoHConfig::class, new DoHConfig([new Nameserver('https://cloudflare-dns.com/dns-query')], null, null, null, $cache));
+        $this->assertInstanceOf(DoHConfig::class, new DoHConfig([new DoHNameserver('https://cloudflare-dns.com/dns-query')], null, null, null, $cache));
     }
 
     /**

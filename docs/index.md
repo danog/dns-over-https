@@ -19,7 +19,7 @@ Supports passing custom headers for [domain fronting](https://en.wikipedia.org/w
 ### Configuration
 
 `danog/dns-over-https` requires you provide a `DoHConfig` object to the resolver.  
-`DoHConfig` requires an (array of) `Nameserver` objects, with a list of `DNS-over-HTTPS` servers to use:  
+`DoHConfig` requires an (array of) `DoHNameserver` objects, with a list of `DNS-over-HTTPS` servers to use:  
 
 ```php
 use Amp\DoH;
@@ -27,19 +27,19 @@ use Amp\Dns;
 
 $nameservers = [];
 
-// Defaults to DoH\NameserverType::RFC8484_POST
-$nameservers []= new DoH\Nameserver('https://mozilla.cloudflare-dns.com/dns-query'); 
+// Defaults to DoH\DoHNameserverType::RFC8484_POST
+$nameservers []= new DoH\DoHNameserver('https://mozilla.cloudflare-dns.com/dns-query'); 
 
-$nameservers []= new DoH\Nameserver('https://mozilla.cloudflare-dns.com/dns-query', DoH\NameserverType::RFC8484_POST);
-$nameservers []= new DoH\Nameserver('https://mozilla.cloudflare-dns.com/dns-query', DoH\NameserverType::RFC8484_GET);
-$nameservers []= new DoH\Nameserver('https://mozilla.cloudflare-dns.com/dns-query', DoH\NameserverType::GOOGLE_JSON);
-$nameservers []= new DoH\Nameserver('https://dns.google.com/resolve', DoH\NameserverType::GOOGLE_JSON);
-$nameservers []= new DoH\Nameserver('https://google.com/resolve', DoH\NameserverType::GOOGLE_JSON, ['Host' => 'https://dns.google.com']);
+$nameservers []= new DoH\DoHNameserver('https://mozilla.cloudflare-dns.com/dns-query', DoH\DoHNameserverType::RFC8484_POST);
+$nameservers []= new DoH\DoHNameserver('https://mozilla.cloudflare-dns.com/dns-query', DoH\DoHNameserverType::RFC8484_GET);
+$nameservers []= new DoH\DoHNameserver('https://mozilla.cloudflare-dns.com/dns-query', DoH\DoHNameserverType::GOOGLE_JSON);
+$nameservers []= new DoH\DoHNameserver('https://dns.google.com/resolve', DoH\DoHNameserverType::GOOGLE_JSON);
+$nameservers []= new DoH\DoHNameserver('https://google.com/resolve', DoH\DoHNameserverType::GOOGLE_JSON, ['Host' => 'https://dns.google.com']);
 
 $DohConfig = new DoH\DoHConfig($nameservers);
 
 // Set default resolver for all AMPHP apps to DNS-over-HTTPS resolver
-Dns\dnsResolver(new DoH\Rfc8484StubDohResolver($DohConfig));
+Dns\dnsResolver(new DoH\Rfc8484StubDoHResolver($DohConfig));
 ```
 
 In the last example, [domain fronting](https://en.wikipedia.org/wiki/Domain_fronting), useful to bypass censorship in non-free countries: from the outside, it looks like the DoH client is connecting to `https://google.com`, but by sending a custom Host HTTP header to the server after the TLS handshake is finished, the server that actually replies is `https://dns.google.com` (this is only possible if both servers are behind a common CDN that allows domain fronting, like google's CDN).  
@@ -55,7 +55,7 @@ The last parameter can be a custom async caching object.
 
 ### Address Resolution
 
-To resolve addresses using `dns-over-https` first set the global DNS resolver as explained in the [configuration section](#configuration), or use an instance of `Rfc8484StubDohResolver` instead of `Rfc1035StubResolver`.  
+To resolve addresses using `dns-over-https` first set the global DNS resolver as explained in the [configuration section](#configuration), or use an instance of `Rfc8484StubDoHResolver` instead of `Rfc1035StubResolver`.  
 
 `Amp\Dns\resolve` provides hostname to IP address resolution. It returns an array of IPv4 and IPv6 addresses by default. The type of IP addresses returned can be restricted by passing a second argument with the respective type.
 
@@ -76,7 +76,7 @@ $records = Amp\Dns\resolve("github.com", Amp\Dns\Record::A);
 
 ### Custom Queries
 
-To resolve addresses using `dns-over-https` first set the global DNS resolver as explained in the [configuration section](#configuration), or use an instance of `Rfc8484StubDohResolver` instead of `Rfc1035StubResolver`.  
+To resolve addresses using `dns-over-https` first set the global DNS resolver as explained in the [configuration section](#configuration), or use an instance of `Rfc8484StubDoHResolver` instead of `Rfc1035StubResolver`.  
 
 `Amp\Dns\query` supports the various other DNS record types such as `MX`, `PTR`, or `TXT`. It automatically rewrites passed IP addresses for `PTR` lookups.
  
@@ -92,7 +92,7 @@ $records = Amp\Dns\query("8.8.8.8", Amp\Dns\Record::PTR);
 
 ### Caching
 
-The `Rfc8484StubDohResolver` caches responses by default in an `Amp\Cache\LocalCache`. You can set any other `Amp\Cache\Cache` implementation by creating a custom instance of `Rfc8484StubDohResolver` and setting that via `Amp\Dns\dnsResolver()`, but it's usually unnecessary. If you have a lot of very short running scripts, you might want to consider using a local DNS resolver with a cache instead of setting a custom cache implementation, such as `dnsmasq`. 
+The `Rfc8484StubDoHResolver` caches responses by default in an `Amp\Cache\LocalCache`. You can set any other `Amp\Cache\Cache` implementation by creating a custom instance of `Rfc8484StubDoHResolver` and setting that via `Amp\Dns\dnsResolver()`, but it's usually unnecessary. If you have a lot of very short running scripts, you might want to consider using a local DNS resolver with a cache instead of setting a custom cache implementation, such as `dnsmasq`. 
 
 ### Reloading Configuration
 

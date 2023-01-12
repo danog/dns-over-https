@@ -5,8 +5,8 @@ namespace Amp\DoH\Test;
 use Amp\Dns;
 use Amp\Dns\DnsRecord;
 use Amp\DoH;
-use Amp\DoH\Nameserver;
-use Amp\DoH\NameserverType;
+use Amp\DoH\DoHNameserver;
+use Amp\DoH\DoHNameserverType;
 use Amp\PHPUnit\AsyncTestCase;
 
 use function Amp\delay;
@@ -16,15 +16,15 @@ use function Amp\Dns\dnsResolver;
 class IntegrationTest extends AsyncTestCase
 {
     /**
-     * @param non-empty-list<list{0: string, 1?: NameserverType}> $nameservers
+     * @param non-empty-list<list{0: string, 1?: DoHNameserverType}> $nameservers
      * @group internet
      * @dataProvider provideServersAndHostnames
      */
     public function testResolve(string $hostname, array $nameservers): void
     {
-        $nameservers = \array_map(fn (array $v) => new Nameserver(...$v), $nameservers);
+        $nameservers = \array_map(fn (array $v) => new DoHNameserver(...$v), $nameservers);
         $DohConfig = new DoH\DoHConfig($nameservers);
-        dnsResolver(new DoH\Rfc8484StubDohResolver($DohConfig));
+        dnsResolver(new DoH\Rfc8484StubDoHResolver($DohConfig));
         $result = Dns\resolve($hostname);
 
         /** @var DnsRecord $record */
@@ -38,15 +38,15 @@ class IntegrationTest extends AsyncTestCase
     }
 
     /**
-     * @param non-empty-list<list{0: string, 1?: NameserverType}> $nameservers
+     * @param non-empty-list<list{0: string, 1?: DoHNameserverType}> $nameservers
      * @group internet
      * @dataProvider provideServers
      */
     public function testWorksAfterConfigReload($nameservers): void
     {
-        $nameservers = \array_map(fn (array $v) => new Nameserver(...$v), $nameservers);
+        $nameservers = \array_map(fn (array $v) => new DoHNameserver(...$v), $nameservers);
         $DohConfig = new DoH\DoHConfig($nameservers);
-        dnsResolver(new DoH\Rfc8484StubDohResolver($DohConfig));
+        dnsResolver(new DoH\Rfc8484StubDoHResolver($DohConfig));
 
         Dns\resolve('google.com');
         /** @psalm-suppress UndefinedInterfaceMethod */
@@ -57,15 +57,15 @@ class IntegrationTest extends AsyncTestCase
     }
 
     /**
-     * @param non-empty-list<list{0: string, 1?: NameserverType}> $nameservers
+     * @param non-empty-list<list{0: string, 1?: DoHNameserverType}> $nameservers
      * @group internet
      * @dataProvider provideServers
      */
     public function testResolveIPv4only($nameservers): void
     {
-        $nameservers = \array_map(fn (array $v) => new Nameserver(...$v), $nameservers);
+        $nameservers = \array_map(fn (array $v) => new DoHNameserver(...$v), $nameservers);
         $DohConfig = new DoH\DoHConfig($nameservers);
-        dnsResolver(new DoH\Rfc8484StubDohResolver($DohConfig));
+        dnsResolver(new DoH\Rfc8484StubDoHResolver($DohConfig));
 
         $records = Dns\resolve("google.com", DnsRecord::A);
 
@@ -82,15 +82,15 @@ class IntegrationTest extends AsyncTestCase
     }
 
     /**
-     * @param non-empty-list<list{0: string, 1?: NameserverType}> $nameservers
+     * @param non-empty-list<list{0: string, 1?: DoHNameserverType}> $nameservers
      * @group internet
      * @dataProvider provideServers
      */
     public function testResolveIPv6only($nameservers): void
     {
-        $nameservers = \array_map(fn (array $v) => new Nameserver(...$v), $nameservers);
+        $nameservers = \array_map(fn (array $v) => new DoHNameserver(...$v), $nameservers);
         $DohConfig = new DoH\DoHConfig($nameservers);
-        dnsResolver(new DoH\Rfc8484StubDohResolver($DohConfig));
+        dnsResolver(new DoH\Rfc8484StubDoHResolver($DohConfig));
 
         $records = Dns\resolve("google.com", DnsRecord::AAAA);
 
@@ -107,15 +107,15 @@ class IntegrationTest extends AsyncTestCase
     }
 
     /**
-     * @param non-empty-list<list{0: string, 1?: NameserverType}> $nameservers
+     * @param non-empty-list<list{0: string, 1?: DoHNameserverType}> $nameservers
      * @group internet
      * @dataProvider provideServers
      */
     public function testPtrLookup($nameservers): void
     {
-        $nameservers = \array_map(fn (array $v) => new Nameserver(...$v), $nameservers);
+        $nameservers = \array_map(fn (array $v) => new DoHNameserver(...$v), $nameservers);
         $DohConfig = new DoH\DoHConfig($nameservers);
-        dnsResolver(new DoH\Rfc8484StubDohResolver($DohConfig));
+        dnsResolver(new DoH\Rfc8484StubDoHResolver($DohConfig));
 
         $result = Dns\query("8.8.4.4", DnsRecord::PTR);
 
@@ -128,7 +128,7 @@ class IntegrationTest extends AsyncTestCase
     }
 
     /**
-     * @return iterable<list{string, list<list{0: string, 1?: NameserverType}>}>
+     * @return iterable<list{string, list<list{0: string, 1?: DoHNameserverType}>}>
      */
     public function provideServersAndHostnames()
     {
@@ -158,16 +158,16 @@ class IntegrationTest extends AsyncTestCase
     }
 
     /**
-     * @return iterable<int, list{list<list{0: string, 1?: NameserverType}>}>
+     * @return iterable<int, list{list<list{0: string, 1?: DoHNameserverType}>}>
      */
     public function provideServers()
     {
         $nameservers = [
             ['https://mozilla.cloudflare-dns.com/dns-query'],
-            ['https://mozilla.cloudflare-dns.com/dns-query', NameserverType::RFC8484_POST],
-            ['https://mozilla.cloudflare-dns.com/dns-query', NameserverType::RFC8484_GET],
-            ['https://mozilla.cloudflare-dns.com/dns-query', NameserverType::GOOGLE_JSON],
-            ['https://dns.google/resolve', NameserverType::GOOGLE_JSON],
+            ['https://mozilla.cloudflare-dns.com/dns-query', DoHNameserverType::RFC8484_POST],
+            ['https://mozilla.cloudflare-dns.com/dns-query', DoHNameserverType::RFC8484_GET],
+            ['https://mozilla.cloudflare-dns.com/dns-query', DoHNameserverType::GOOGLE_JSON],
+            ['https://dns.google/resolve', DoHNameserverType::GOOGLE_JSON],
         ];
         for ($start = 0; $start < \count($nameservers); $start++) {
             $temp = [];

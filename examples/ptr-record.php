@@ -7,8 +7,8 @@ use Amp\Dns\DnsRecord;
 use Amp\DoH;
 
 // Set default resolver to DNS-over-HTTPS resolver
-$DohConfig = new DoH\DoHConfig([new DoH\Nameserver('https://mozilla.cloudflare-dns.com/dns-query')]);
-Dns\dnsResolver(new DoH\Rfc8484StubDohResolver($DohConfig));
+$DohConfig = new DoH\DoHConfig([new DoH\DoHNameserver('https://mozilla.cloudflare-dns.com/dns-query')]);
+Dns\dnsResolver(new DoH\Rfc8484StubDoHResolver($DohConfig));
 
 $ip = $argv[1] ?? "8.8.8.8";
 
