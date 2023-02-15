@@ -167,6 +167,8 @@ class IntegrationTest extends AsyncTestCase
             ['https://mozilla.cloudflare-dns.com/dns-query', DoHNameserverType::RFC8484_POST],
             ['https://mozilla.cloudflare-dns.com/dns-query', DoHNameserverType::RFC8484_GET],
             ['https://mozilla.cloudflare-dns.com/dns-query', DoHNameserverType::GOOGLE_JSON],
+            ['https://dns.google/dns-query', DoHNameserverType::RFC8484_POST],
+            ['https://dns.google/dns-query', DoHNameserverType::RFC8484_GET],
             ['https://dns.google/resolve', DoHNameserverType::GOOGLE_JSON],
         ];
         for ($start = 0; $start < \count($nameservers); $start++) {

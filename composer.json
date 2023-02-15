@@ -40,7 +40,7 @@
             "email": "aaron@trowski.com"
         }
     ],
-    "minimum-stability": "dev",
+    "minimum-stability": "beta",
     "require": {
         "php": ">=8.1",
         "amphp/cache": "^2",

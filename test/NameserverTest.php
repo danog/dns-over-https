@@ -28,6 +28,8 @@ class DoHNameserverTest extends AsyncTestCase
             ['https://mozilla.cloudflare-dns.com/dns-query', DoHNameserverType::RFC8484_POST],
             ['https://mozilla.cloudflare-dns.com/dns-query', DoHNameserverType::RFC8484_GET],
             ['https://mozilla.cloudflare-dns.com/dns-query', DoHNameserverType::GOOGLE_JSON],
+            ['https://dns.google/dns-query', DoHNameserverType::RFC8484_GET],
+            ['https://dns.google/dns-query', DoHNameserverType::GOOGLE_JSON],
             ['https://dns.google/resolve', DoHNameserverType::GOOGLE_JSON],
         ];
     }
@@ -66,12 +68,16 @@ class DoHNameserverTest extends AsyncTestCase
             ['http://mozilla.cloudflare-dns.com/dns-query', DoHNameserverType::RFC8484_POST],
             ['http://mozilla.cloudflare-dns.com/dns-query', DoHNameserverType::RFC8484_GET],
             ['http://mozilla.cloudflare-dns.com/dns-query', DoHNameserverType::GOOGLE_JSON],
+            ['http://dns.google/dns-query', DoHNameserverType::RFC8484_POST],
+            ['http://dns.google/dns-query', DoHNameserverType::RFC8484_GET],
             ['http://dns.google/resolve', DoHNameserverType::GOOGLE_JSON],
 
             ['mozilla.cloudflare-dns.com/dns-query'],
             ['mozilla.cloudflare-dns.com/dns-query', DoHNameserverType::RFC8484_POST],
             ['mozilla.cloudflare-dns.com/dns-query', DoHNameserverType::RFC8484_GET],
             ['mozilla.cloudflare-dns.com/dns-query', DoHNameserverType::GOOGLE_JSON],
+            ['dns.google/dns-query', DoHNameserverType::RFC8484_POST],
+            ['dns.google/dns-query', DoHNameserverType::RFC8484_GET],
             ['dns.google/resolve', DoHNameserverType::GOOGLE_JSON],
         ];
     }

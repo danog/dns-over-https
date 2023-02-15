@@ -10,7 +10,7 @@ use Amp\Dns\DnsResolver;
 use Amp\Dns\Rfc1035StubDnsResolver;
 use Amp\Dns\UnixDnsConfigLoader;
 use Amp\Dns\WindowsDnsConfigLoader;
-use Amp\Http\Client\DelegateHttpClient;
+use Amp\Http\Client\HttpClient;
 use Amp\Http\Client\HttpClientBuilder;
 
 final class DoHConfig
@@ -19,7 +19,7 @@ final class DoHConfig
      * @var non-empty-array<DoHNameserver> $nameservers
      */
     private readonly array $nameservers;
-    private readonly DelegateHttpClient $httpClient;
+    private readonly HttpClient $httpClient;
     private readonly DnsResolver $subResolver;
     private readonly DnsConfigLoader $configLoader;
     private readonly Cache $cache;
@@ -27,7 +27,7 @@ final class DoHConfig
     /**
      * @param non-empty-array<DoHNameserver> $nameservers
      */
-    public function __construct(array $nameservers, ?DelegateHttpClient $httpClient = null, ?DnsResolver $resolver = null, ?DnsConfigLoader $configLoader = null, ?Cache $cache = null)
+    public function __construct(array $nameservers, ?HttpClient $httpClient = null, ?DnsResolver $resolver = null, ?DnsConfigLoader $configLoader = null, ?Cache $cache = null)
     {
         /** @psalm-suppress TypeDoesNotContainType */
         if (\count($nameservers) < 1) {
@@ -68,7 +68,7 @@ final class DoHConfig
         return false;
     }
 
-    public function getHttpClient(): DelegateHttpClient
+    public function getHttpClient(): HttpClient
     {
         return $this->httpClient;
     }

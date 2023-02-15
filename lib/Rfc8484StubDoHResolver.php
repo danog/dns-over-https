@@ -15,7 +15,7 @@ use Amp\Dns\DnsTimeoutException;
 use Amp\Dns\MissingDnsRecordException;
 use Amp\Dns\Rfc1035StubDnsResolver;
 use Amp\Future;
-use Amp\Http\Client\DelegateHttpClient;
+use Amp\Http\Client\HttpClient;
 use Amp\Http\Client\Request;
 use Amp\NullCancellation;
 use danog\LibDNSJson\JsonDecoder;
@@ -56,7 +56,7 @@ final class Rfc8484StubDoHResolver implements DnsResolver
     private QueryEncoder $encoderJson;
     private JsonDecoder $decoderJson;
     private MessageFactory $messageFactory;
-    private DelegateHttpClient $httpClient;
+    private HttpClient $httpClient;
 
     public function __construct(private DoHConfig $dohConfig)
     {
@@ -350,6 +350,15 @@ final class Rfc8484StubDoHResolver implements DnsResolver
 
         return $promise->await($cancellation);
     }
+    /**
+     * Base64URL encode.
+     *
+     * @param string $data Data to encode
+     */
+    private static function base64urlEncode(string $data): string
+    {
+        return \rtrim(\strtr(\base64_encode($data), '+/', '-_'), '=');
+    }
 
     private function ask(DoHNameserver $nameserver, Question $question, Cancellation $cancellation): Message
     {
@@ -358,24 +367,24 @@ final class Rfc8484StubDoHResolver implements DnsResolver
         switch ($nameserver->getType()) {
             case DoHNameserverType::RFC8484_GET:
                 $data = $this->encoder->encode($message);
-                $request = new Request($nameserver->getUri().'?'.\http_build_query(['dns' => \base64_encode($data), 'ct' => 'application/dns-message']), "GET");
-                $request->setHeader('accept', 'application/dns-message');
+                $request = new Request($nameserver->getUri().'?'.\http_build_query(['dns' => self::base64urlEncode($data), 'ct' => 'application/dns-message']), "GET");
                 $request->setHeaders($nameserver->getHeaders());
+                $request->setHeader('accept', 'application/dns-message');
                 break;
             case DoHNameserverType::RFC8484_POST:
                 $data = $this->encoder->encode($message);
                 $request = new Request($nameserver->getUri(), "POST");
                 $request->setBody($data);
+                $request->setHeaders($nameserver->getHeaders());
                 $request->setHeader('content-type', 'application/dns-message');
                 $request->setHeader('accept', 'application/dns-message');
                 $request->setHeader('content-length', (string) \strlen($data));
-                $request->setHeaders($nameserver->getHeaders());
                 break;
             case DoHNameserverType::GOOGLE_JSON:
                 $data = $this->encoderJson->encode($message);
                 $request = new Request($nameserver->getUri().'?'.$data, "GET");
-                $request->setHeader('accept', 'application/dns-json');
                 $request->setHeaders($nameserver->getHeaders());
+                $request->setHeader('accept', 'application/dns-json');
                 break;
         }
         \assert($request !== null);
