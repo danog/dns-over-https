@@ -387,7 +387,6 @@ final class Rfc8484StubDoHResolver implements DnsResolver
                 $request->setHeader('accept', 'application/dns-json');
                 break;
         }
-        \assert($request !== null);
 
         $response = $this->httpClient->request($request, $cancellation);
         if ($response->getStatus() !== 200) {

@@ -19,7 +19,7 @@ class DoHNameserverTest extends AsyncTestCase
     }
 
     /**
-     * @return list<list{0: string, 1?: DoHNameserverType::RFC8484_POST}>
+     * @return list<list{0: string, 1?: DoHNameserverType}>
      */
     public function provideValidServers()
     {
@@ -44,7 +44,7 @@ class DoHNameserverTest extends AsyncTestCase
     }
 
     /**
-     * @return list<list{0: string, 1?: DoHNameserverType::RFC8484_POST}>
+     * @return list<list{0: string, 1?: DoHNameserverType}>
      */
     public function provideInvalidServers(): array
     {

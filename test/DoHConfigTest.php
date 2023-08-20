@@ -31,7 +31,7 @@ class DoHConfigTest extends AsyncTestCase
     }
 
     /**
-     * @return list<non-empty-list<list{0: DoHNameserver, 1?: DoHNameserverType}>>
+     * @return list{list{list{Amp\DoH\DoHNameserver}}, list{list{Amp\DoH\DoHNameserver}}, list{list{Amp\DoH\DoHNameserver}}, list{list{Amp\DoH\DoHNameserver}}, list{list{Amp\DoH\DoHNameserver}}, list{list{Amp\DoH\DoHNameserver, Amp\DoH\DoHNameserver}}}
      */
     public function provideValidServers(): array
     {
