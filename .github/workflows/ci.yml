@@ -67,7 +67,7 @@ jobs:
         run: vendor/bin/phpunit ${{ matrix.phpunit-flags }}
 
       - name: Run psalm
-        run: vendor/bin/psalm.phar
+        run: vendor/bin/psalm
 
       - name: Run style fixer
         env:
