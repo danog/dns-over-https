@@ -59,7 +59,7 @@
         "amphp/phpunit-util": "^3",
         "phpunit/phpunit": "^9",
         "amphp/php-cs-fixer-config": "^2",
-        "psalm/phar": "^5"
+        "vimeo/psalm": "dev-master"
     },
     "autoload": {
         "psr-4": {
