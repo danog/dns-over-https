@@ -73,7 +73,7 @@ final class Rfc8484StubDoHResolver implements DnsResolver
     }
 
     /** @inheritdoc */
-    public function resolve(string $name, int $typeRestriction = null, ?Cancellation $cancellation = null): array
+    public function resolve(string $name, ?int $typeRestriction = null, ?Cancellation $cancellation = null): array
     {
         if ($typeRestriction !== null && $typeRestriction !== DnsRecord::A && $typeRestriction !== DnsRecord::AAAA) {
             throw new \Error("Invalid value for parameter 2: null|DnsRecord::A|DnsRecord::AAAA expected");
@@ -233,7 +233,7 @@ final class Rfc8484StubDoHResolver implements DnsResolver
         $this->pendingConfig->await();
     }
 
-    private function queryHosts(string $name, int $typeRestriction = null): array
+    private function queryHosts(string $name, ?int $typeRestriction = null): array
     {
         \assert($this->config !== null);
         $hosts = $this->config->getKnownHosts();
